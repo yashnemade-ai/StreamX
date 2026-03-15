@@ -249,22 +249,27 @@
             } catch (e) { console.error("Load Error"); }
         }
 
-        function renderSlider() {
-            const wrapper = document.getElementById('sliderWrapper');
-            const dots = document.getElementById('sliderDots');
-            wrapper.innerHTML = heroItems.map(m => `
-                <div class="slide">
-                    <img src="${m.logo}">
-                    <div class="slide-content">
-                        <h1>${m.name}</h1>
-                        <p>Platinum Exclusive • ${m.genre || 'Trending'}</p>
-                        <button class="filter-chip active" style="border:none" onclick="openPlayer('${m.url}')">
-                           <i class="fa fa-play"></i> &nbsp; Watch Now
-                        </button>
-                    </div>
-                </div>`).join('');
-            dots.innerHTML = heroItems.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>`).join('');
-        }
+       function renderSlider() {
+    const wrapper = document.getElementById('sliderWrapper');
+    const dots = document.getElementById('sliderDots');
+    
+    wrapper.innerHTML = heroItems.map(m => `
+        <div class="slide">
+            <img src="${m.logo}">
+            <div class="slide-content">
+                <h1>${m.name}</h1>
+                <p>Platinum Exclusive • ${m.cat || 'Trending'}</p>
+                <!-- ✅ Class ko filter-chip se badal kar btn-watch-main kiya -->
+                <button class="btn-watch-main" onclick="openPlayer('${m.url}')">
+                   <i class="fa fa-play"></i> &nbsp; Watch Now
+                </button>
+            </div>
+        </div>`).join('');
+
+    dots.innerHTML = heroItems.map((_, i) => `
+        <div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>
+    `).join('');
+}
 
         function goToSlide(index) {
             currentIndex = index;
