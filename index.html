@@ -344,35 +344,17 @@
             renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
         }
 
-        function openPlayer(url) {
-    if (!url) return;
+function openPlayer(url) {
+        if(!url) return;
+        document.getElementById('playerModal').style.display = 'block';
+        
+        let type = 'application/x-mpegURL'; // Default HLS
+        if(url.includes('.mp4')) type = 'video/mp4';
+        if(url.includes('.mpd')) type = 'application/dash+xml';
 
-    // Modal दिखाओ
-    document.getElementById('playerModal').style.display = 'block';
-
-    // ✅ Format Detection Logic
-    let type = 'application/x-mpegURL'; // Default for .m3u8
-    
-    if (url.includes('.mpd')) {
-        type = 'application/dash+xml';
-    } else if (url.contains('.mp4')) {
-        type = 'video/mp4';
+        vPlayer.src({ src: url, type: type });
+        vPlayer.play();
     }
-
-    // प्लेयर को रिसेट करके नई लिंक लोड करें
-    vPlayer.src({
-        src: url,
-        type: type
-    });
-
-    vPlayer.ready(function() {
-        vPlayer.play().catch(function(error) {
-            console.log("Auto-play was prevented");
-        });
-    });
-}
-        }
-
         function closePlayer() { vPlayer.pause(); document.getElementById('playerModal').style.display = 'none'; }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
