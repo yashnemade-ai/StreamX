@@ -345,9 +345,32 @@
         }
 
         function openPlayer(url) {
-            document.getElementById('playerModal').style.display = 'flex';
-            vPlayer.src({ src: url, type: 'application/x-mpegURL' });
-            vPlayer.play();
+    if (!url) return;
+
+    // Modal दिखाओ
+    document.getElementById('playerModal').style.display = 'block';
+
+    // ✅ Format Detection Logic
+    let type = 'application/x-mpegURL'; // Default for .m3u8
+    
+    if (url.includes('.mpd')) {
+        type = 'application/dash+xml';
+    } else if (url.contains('.mp4')) {
+        type = 'video/mp4';
+    }
+
+    // प्लेयर को रिसेट करके नई लिंक लोड करें
+    vPlayer.src({
+        src: url,
+        type: type
+    });
+
+    vPlayer.ready(function() {
+        vPlayer.play().catch(function(error) {
+            console.log("Auto-play was prevented");
+        });
+    });
+}
         }
 
         function closePlayer() { vPlayer.pause(); document.getElementById('playerModal').style.display = 'none'; }
