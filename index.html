@@ -345,18 +345,30 @@
             renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
         }
 
-function openPlayer(url) {
+ function openPlayer(url) {
         if(!url) return;
-        document.getElementById('playerModal').style.display = 'block';
+        
+        const modal = document.getElementById('playerModal');
+        modal.style.display = 'flex'; // Centering fix
         
         let type = 'application/x-mpegURL'; // Default HLS
         if(url.includes('.mp4')) type = 'video/mp4';
         if(url.includes('.mpd')) type = 'application/dash+xml';
 
-        vPlayer.src({ src: url, type: type });
-        vPlayer.play();
+        vPlayer.ready(function() {
+            vPlayer.src({ src: url, type: type });
+            vPlayer.load();
+            vPlayer.play().catch(function(error) {
+                console.log("Playback failed or blocked by browser");
+            });
+        });
     }
-        function closePlayer() { vPlayer.pause(); document.getElementById('playerModal').style.display = 'none'; }
+
+    function closePlayer() {
+        vPlayer.pause();
+        vPlayer.src(""); // Player memory clear
+        document.getElementById('playerModal').style.display = 'none';
+    }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
         init();
