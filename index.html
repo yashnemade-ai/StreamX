@@ -3,190 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STREAMX | Premium Experience</title>
+    <title>STREAMX | Platinum Edition</title>
     
-    <!-- Fonts: Outfit for a modern pro look -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Video.js -->
     <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <link href="https://unpkg.com/@videojs/themes@1.0.1/dist/city/index.css" rel="stylesheet">
 
     <style>
         :root {
             --bg: #050505;
-            --nav-bg: rgba(5, 5, 5, 0.7);
-            --card-bg: #111114;
+            --nav-bg: #000000; /* Solid Black */
+            --card-bg: #0d0d0f;
             --text: #ffffff;
             --text-dim: #b3b3b3;
             --accent: #E50914;
-            --border: rgba(255, 255, 255, 0.08);
+            --border: #1a1a1a;
         }
 
         [data-theme="light"] {
-            --bg: #f8f9fa;
-            --nav-bg: rgba(248, 249, 250, 0.8);
-            --card-bg: #ffffff;
-            --text: #1a1a1f;
-            --text-dim: #6c757d;
+            --bg: #ffffff;
+            --nav-bg: #f8f9fa; /* Solid White/Light Gray */
+            --card-bg: #f1f1f1;
+            --text: #000000;
+            --text-dim: #555555;
             --accent: #E50914;
-            --border: rgba(0, 0, 0, 0.08);
+            --border: #dddddd;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-        body { background-color: var(--bg); color: var(--text); overflow-x: hidden; transition: background 0.3s; }
+        body { background-color: var(--bg); color: var(--text); overflow-x: hidden; transition: 0.3s; }
 
-        /* --- NAVBAR --- */
+        /* --- SOLID NAVBAR --- */
         nav {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 6%; background: var(--nav-bg);
-            backdrop-filter: blur(25px); position: fixed; width: 100%; top: 0; z-index: 1000;
-            border-bottom: 1px solid var(--border);
+            padding: 15px 5%; background: var(--nav-bg);
+            position: fixed; width: 100%; top: 0; z-index: 1000;
+            border-bottom: 2px solid var(--border);
         }
-        .nav-left { display: flex; align-items: center; gap: 25px; }
-        .hamburger { font-size: 22px; cursor: pointer; color: var(--text); opacity: 0.8; }
-        
-        .logo { font-size: 30px; font-weight: 900; letter-spacing: -1px; cursor: pointer; }
+        .nav-left { display: flex; align-items: center; gap: 20px; }
+        .logo { font-size: 32px; font-weight: 900; letter-spacing: -1.5px; cursor: pointer; }
         .logo span.red { color: var(--accent); }
-        .logo span.white { color: var(--text); }
-
+        
         .nav-right { display: flex; align-items: center; gap: 15px; }
         .search-box {
-            background: rgba(128,128,128,0.1); border: 1px solid var(--border);
-            padding: 7px 15px; border-radius: 12px; display: flex; align-items: center;
+            background: var(--bg); border: 2px solid var(--border);
+            padding: 8px 15px; border-radius: 8px; display: flex; align-items: center;
         }
-        .search-box input { background: transparent; border: none; color: var(--text); outline: none; margin-left: 10px; width: 180px; font-size: 14px; }
+        .search-box input { background: transparent; border: none; color: var(--text); outline: none; width: 180px; font-weight: 600; }
+
+        /* --- HERO SLIDER --- */
+        .slider-container {
+            width: 100%; height: 80vh; margin-top: 65px; position: relative;
+            overflow: hidden; background: #000;
+        }
+        .slider-wrapper {
+            display: flex; width: 100%; height: 100%;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .slide {
+            min-width: 100%; height: 100%; position: relative;
+        }
+        .slide img {
+            width: 100%; height: 100%; object-fit: 100% 100%; /* Image Not Cut */
+        }
+        .slide-content {
+            position: absolute; bottom: 60px; left: 6%; z-index: 10;
+            text-align: left; max-width: 600px;
+        }
+        .slide-content h1 { font-size: clamp(30px, 5vw, 55px); font-weight: 900; margin-bottom: 5px; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
+        .slide-content p { font-size: 18px; color: #ccc; margin-bottom: 20px; font-weight: 500; }
+
+        /* Slider Controls */
+        .slider-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.5); color: white; border: none;
+            width: 50px; height: 50px; border-radius: 50%; cursor: pointer; z-index: 20;
+            font-size: 20px; transition: 0.3s;
+        }
+        .slider-btn:hover { background: var(--accent); }
+        .prev { left: 20px; }
+        .next { right: 20px; }
+
+        .slider-dots {
+            position: absolute; bottom: 20px; width: 100%;
+            display: flex; justify-content: center; gap: 8px; z-index: 20;
+        }
+        .dot { width: 12px; height: 12px; background: rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; transition: 0.3s; }
+        .dot.active { background: var(--accent); width: 30px; border-radius: 10px; }
+
+        /* --- FILTERS --- */
+        .filter-container { padding: 30px 6% 0; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; }
+        .filter-chip {
+            padding: 10px 25px; background: var(--card-bg); border: 2px solid var(--border);
+            border-radius: 5px; cursor: pointer; font-weight: 700; white-space: nowrap;
+        }
+        .filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        /* --- MOVIE GRID & CARDS --- */
+        .container { padding: 30px 6% 100px; }
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 25px; }
         
-        .theme-btn { font-size: 18px; cursor: pointer; color: var(--text); background: none; border: none; padding: 5px; }
+        .movie-card { background: var(--card-bg); border-radius: 10px; overflow: hidden; border: 2px solid var(--border); transition: 0.3s; cursor: pointer; }
+        .movie-card:hover { transform: translateY(-10px); border-color: var(--accent); }
+        .movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
+        
+        .card-info { padding: 15px; }
+        .card-info h4 { font-size: 15px; font-weight: 800; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-genre { font-size: 12px; color: var(--accent); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .quality-tag { 
+            background: var(--accent); color: white; font-size: 10px; 
+            font-weight: 900; padding: 3px 8px; border-radius: 4px; display: inline-block;
+        }
 
         /* --- SIDEBAR --- */
         .sidebar {
             position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
-            background: var(--bg); z-index: 2000; border-right: 1px solid var(--border);
-            padding: 40px 30px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--nav-bg); z-index: 2000; border-right: 2px solid var(--border);
+            padding: 40px 30px; transition: 0.4s;
         }
         .sidebar.open { left: 0; }
-        .sidebar-close { position: absolute; top: 20px; right: 25px; font-size: 28px; cursor: pointer; opacity: 0.5; }
-        .sidebar h2 { margin-bottom: 20px; font-weight: 800; font-size: 22px; }
-        .sidebar-info p { margin-bottom: 12px; font-size: 14px; color: var(--text-dim); }
-        .sidebar-info a { color: var(--accent); text-decoration: none; font-weight: 600; }
-        .sidebar-info a:hover { text-decoration: underline; }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1500; display: none; backdrop-filter: blur(4px); }
+        .sidebar-info a { color: var(--accent); text-decoration: none; font-weight: bold; }
 
-        /* --- HERO SLIDESHOW --- */
-        .hero {
-            height: 80vh; width: 100%; position: relative; display: flex; 
-            align-items: flex-end; padding: 0 6% 60px; background-size: cover; background-position: center;
-            transition: background-image 1s ease-in-out;
-        }
-        /* Very subtle bottom-up gradient for text visibility */
-        .hero::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 40%);
-        }
-        .hero-content { position: relative; z-index: 10; max-width: 600px; }
-        .hero-content h1 { font-size: clamp(30px, 5vw, 48px); font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
-        .hero-content p { color: #e0e0e0; margin-bottom: 20px; font-size: 16px; font-weight: 400; opacity: 0.9; }
-        
-        .btn-play {
-            background: var(--accent); color: white; padding: 12px 35px; border: none;
-            border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 15px;
-            display: inline-flex; align-items: center; gap: 10px;
-        }
-
-        /* --- CATEGORY FILTERS --- */
-        .filter-wrapper { 
-            padding: 30px 6% 10px; display: flex; gap: 10px; 
-            overflow-x: auto; scrollbar-width: none;
-        }
-        .filter-wrapper::-webkit-scrollbar { display: none; }
-        .filter-chip {
-            padding: 8px 22px; background: var(--card-bg); border: 1px solid var(--border);
-            border-radius: 50px; cursor: pointer; font-size: 14px; font-weight: 600; 
-            white-space: nowrap; transition: 0.3s;
-        }
-        .filter-chip.active { background: var(--accent); color: white; border-color: var(--accent); }
-
-        /* --- MOVIE GRID --- */
-        .container { padding: 20px 6% 80px; }
-        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-        .movie-card { 
-            background: var(--card-bg); border-radius: 14px; overflow: hidden; 
-            cursor: pointer; border: 1px solid var(--border); transition: 0.3s;
-        }
-        .movie-card:hover { transform: scale(1.03); border-color: var(--accent); }
-        .movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
-        .movie-card h4 { padding: 12px; font-size: 13px; font-weight: 600; text-align: center; }
-
-        /* --- MODAL PLAYER --- */
-        .player-modal {
-            position: fixed; inset: 0; background: #000;
-            display: none; justify-content: center; align-items: center; z-index: 3000;
-        }
-        .close-player { position: absolute; top: 20px; right: 25px; color: white; font-size: 35px; cursor: pointer; z-index: 3100; }
+        /* --- PLAYER --- */
+        .player-modal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; }
+        .close-player { position: absolute; top: 20px; right: 25px; color: white; font-size: 40px; cursor: pointer; z-index: 3100; }
 
         @media (max-width: 768px) {
             .search-box { display: none; }
-            .hero { height: 55vh; padding-bottom: 40px; }
-            .hero-content h1 { font-size: 32px; }
-            .movie-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
+            .slider-container { height: 50vh; }
+            .movie-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
         }
     </style>
 </head>
 <body>
 
-    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-    <!-- SIDEBAR -->
-    <div class="sidebar" id="sidebar">
-        <span class="sidebar-close" onclick="toggleSidebar()">&times;</span>
-        <div class="logo" style="margin-bottom: 40px;"><span class="red">STREAM</span><span class="white">X</span></div>
-        <div class="sidebar-info">
-            <h2>Information</h2>
-            <p><b>Developer:</b> Yash</p>
-            <p><b>Platform:</b> StreamX Platinum</p>
-            <p><b>Support Email:</b> <br>
-               <a href="mailto:support@streamx.com?subject=Customer Support - StreamX">support@streamx.com</a>
-            </p>
-            <p style="margin-top: 20px; opacity: 0.6; font-size: 13px;">© 2026 StreamX All rights reserved.</p>
-        </div>
-    </div>
-
-    <!-- HEADER -->
-    <nav id="navbar">
+    <!-- NAVBAR -->
+    <nav>
         <div class="nav-left">
-            <i class="fa-solid fa-bars-staggered hamburger" onclick="toggleSidebar()"></i>
-            <div class="logo" onclick="location.reload()">
-                <span class="red">STREAM</span><span class="white">X</span>
-            </div>
+            <i class="fa fa-bars" style="cursor:pointer;" onclick="toggleSidebar()"></i>
+            <div class="logo"><span class="red">STREAM</span><span class="white">X</span></div>
         </div>
         <div class="nav-right">
             <div class="search-box">
-                <i class="fa fa-search" style="opacity: 0.5;"></i>
+                <i class="fa fa-search"></i>
                 <input type="text" id="searchInput" placeholder="Search..." oninput="searchMovies()">
             </div>
-            <button class="theme-btn" id="themeToggle" onclick="toggleTheme()">
-                <i class="fa fa-moon"></i>
-            </button>
+            <button class="theme-btn" onclick="toggleTheme()"><i class="fa fa-moon" id="themeIcon"></i></button>
         </div>
     </nav>
 
-    <!-- HERO SLIDESHOW -->
-    <section class="hero" id="hero">
-        <div class="hero-content" id="heroContent">
-            <h1 id="heroTitle">Connecting...</h1>
-            <p id="heroDesc">The future of premium cinema is here.</p>
-            <button class="btn-play" id="heroPlayBtn"><i class="fa fa-play"></i> Watch Now</button>
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <h2 style="margin-bottom:20px;">Menu</h2>
+        <div class="sidebar-info">
+            <p><b>Developed by:</b> yash</p>
+            <p><b>Email:</b> <a href="mailto:support@streamx.com">support@streamx.com</a></p>
+            <br>
+            <p>Premium streaming platform with 4K support and zero buffering.</p>
         </div>
-    </section>
-
-    <!-- FILTERS -->
-    <div class="filter-wrapper" id="filterWrapper">
-        <div class="filter-chip active" onclick="applyFilter('All', this)">All Content</div>
+        <button onclick="toggleSidebar()" style="margin-top:30px; background:var(--accent); color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">Close</button>
     </div>
 
-    <!-- MAIN GRID -->
+    <!-- HERO SLIDER -->
+    <section class="slider-container">
+        <button class="slider-btn prev" onclick="moveSlide(-1)"><i class="fa fa-chevron-left"></i></button>
+        <button class="slider-btn next" onclick="moveSlide(1)"><i class="fa fa-chevron-right"></i></button>
+        <div class="slider-wrapper" id="sliderWrapper"></div>
+        <div class="slider-dots" id="sliderDots"></div>
+    </section>
+
+    <!-- CATEGORY FILTER -->
+    <div class="filter-container" id="filterWrapper">
+        <div class="filter-chip active" onclick="filterData('All', this)">All Content</div>
+    </div>
+
+    <!-- MOVIE GRID -->
     <div class="container">
         <div class="movie-grid" id="movieGrid"></div>
     </div>
@@ -194,91 +185,96 @@
     <!-- PLAYER -->
     <div class="player-modal" id="playerModal">
         <span class="close-player" onclick="closePlayer()">&times;</span>
-        <video id="v-player" class="video-js vjs-theme-city vjs-big-play-centered" controls preload="auto" style="width: 100%; height: 100vh;"></video>
+        <video id="v-player" class="video-js vjs-big-play-centered" controls preload="auto" style="width: 100%; height: 100vh;"></video>
     </div>
 
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script>
-        let allMovies = [], heroItems = [], gridItems = [], currentSlide = 0;
+        let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
         const vPlayer = videojs('v-player');
 
-        const JSON_URL = "https://api.npoint.io/56fc751c2191cd12b672"; 
+        async function init() {
+            const res = await fetch("https://api.npoint.io/56fc751c2191cd12b672");
+            allMovies = await res.json();
+            
+            heroItems = allMovies.filter(m => !m.cat || m.cat === "");
+            gridItems = allMovies.filter(m => m.cat && m.cat !== "");
 
-        async function fetchData() {
-            try {
-                const res = await fetch(JSON_URL);
-                allMovies = await res.json();
-                
-                heroItems = allMovies.filter(m => !m.cat || m.cat === "");
-                gridItems = allMovies.filter(m => m.cat && m.cat !== "");
-
-                setupFilters();
-                startSlideshow();
-                renderGrid(gridItems);
-            } catch (e) { console.error("API Error"); }
+            renderSlider();
+            renderFilters();
+            renderGrid(gridItems);
+            startAutoSlide();
         }
 
-        // --- SLIDESHOW ---
-        function startSlideshow() {
-            if(heroItems.length === 0) return;
-            updateHero(heroItems[0]);
-            setInterval(() => {
-                currentSlide = (currentSlide + 1) % heroItems.length;
-                updateHero(heroItems[currentSlide]);
-            }, 8000);
+        // --- SLIDER LOGIC ---
+        function renderSlider() {
+            const wrapper = document.getElementById('sliderWrapper');
+            const dots = document.getElementById('sliderDots');
+            
+            wrapper.innerHTML = heroItems.map(m => `
+                <div class="slide">
+                    <img src="${m.logo}">
+                    <div class="slide-content">
+                        <h1>${m.name}</h1>
+                        <p>Experience the ultimate cinema.</p>
+                        <button class="filter-chip active" style="border:none" onclick="openPlayer('${m.url}')"><i class="fa fa-play"></i> &nbsp; Watch Now</button>
+                    </div>
+                </div>
+            `).join('');
+
+            dots.innerHTML = heroItems.map((_, i) => `
+                <div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>
+            `).join('');
         }
 
-        function updateHero(m) {
-            const hero = document.getElementById('hero');
-            const content = document.getElementById('heroContent');
-            content.style.opacity = 0;
-            setTimeout(() => {
-                hero.style.backgroundImage = `url('${m.logo}')`;
-                document.getElementById('heroTitle').innerText = m.name;
-                document.getElementById('heroPlayBtn').onclick = () => openPlayer(m.url);
-                content.style.opacity = 1;
-            }, 600);
+        function moveSlide(step) {
+            currentIndex = (currentIndex + step + heroItems.length) % heroItems.length;
+            updateSliderUI();
         }
 
-        // --- FILTERS ---
-        function setupFilters() {
-            const wrapper = document.getElementById('filterWrapper');
-            const categories = [...new Set(gridItems.map(m => m.cat))];
-            categories.forEach(cat => {
-                wrapper.innerHTML += `<div class="filter-chip" onclick="applyFilter('${cat}', this)">${cat}</div>`;
-            });
+        function goToSlide(index) {
+            currentIndex = index;
+            updateSliderUI();
         }
 
-        function applyFilter(cat, el) {
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-            const filtered = cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat);
-            renderGrid(filtered);
+        function updateSliderUI() {
+            const wrapper = document.getElementById('sliderWrapper');
+            const dots = document.querySelectorAll('.dot');
+            wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
+            dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
         }
 
-        // --- GRID ---
+        function startAutoSlide() {
+            setInterval(() => moveSlide(1), 8000);
+        }
+
+        // --- GRID LOGIC ---
         function renderGrid(data) {
             const grid = document.getElementById('movieGrid');
             grid.innerHTML = data.map(m => `
                 <div class="movie-card" onclick="openPlayer('${m.url}')">
-                    <img src="${m.logo}" loading="lazy">
-                    <h4>${m.name}</h4>
+                    <img src="${m.logo}">
+                    <div class="card-info">
+                        <span class="card-genre">${m.genre || 'Action'}</span>
+                        <h4>${m.name}</h4>
+                        <div class="quality-tag">${m.quality || 'HD'}</div>
+                    </div>
                 </div>
             `).join('');
         }
 
-        // --- UI ---
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('overlay').style.display = 
-                document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
+        function renderFilters() {
+            const wrapper = document.getElementById('filterWrapper');
+            const cats = [...new Set(gridItems.map(m => m.cat))];
+            cats.forEach(c => {
+                wrapper.innerHTML += `<div class="filter-chip" onclick="filterData('${c}', this)">${c}</div>`;
+            });
         }
 
-        function toggleTheme() {
-            const html = document.documentElement;
-            const isDark = html.getAttribute('data-theme') === 'dark';
-            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-            document.getElementById('themeToggle').innerHTML = isDark ? '<i class="fa fa-sun"></i>' : '<i class="fa fa-moon"></i>';
+        function filterData(cat, el) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            renderGrid(cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat));
         }
 
         function searchMovies() {
@@ -286,12 +282,18 @@
             renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
         }
 
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const theme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', theme);
+            document.getElementById('themeIcon').className = theme === 'dark' ? 'fa fa-moon' : 'fa fa-sun';
+        }
+
         function openPlayer(url) {
             document.getElementById('playerModal').style.display = 'flex';
-            let type = 'application/x-mpegURL';
-            if(url.includes('.mp4')) type = 'video/mp4';
-            if(url.includes('.mpd')) type = 'application/dash+xml';
-            vPlayer.src({ src: url, type: type });
+            vPlayer.src({ src: url, type: 'application/x-mpegURL' });
             vPlayer.play();
         }
 
@@ -300,7 +302,7 @@
             document.getElementById('playerModal').style.display = 'none';
         }
 
-        fetchData();
+        init();
     </script>
 </body>
 </html>
