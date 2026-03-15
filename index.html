@@ -242,166 +242,158 @@
         <video id="v-player" class="video-js vjs-big-play-centered" controls preload="auto" style="width:100%; height:100vh;"></video>
     </div>
 
-<!-- ArtPlayer & Streaming Engines -->
-<script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/dashjs@latest/dist/dash.all.min.js"></script>
+<!-- 1. All Scripts -->
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
 
     <script>
-    let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
-    let art; // Naya player variable
+        let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
+        let vPlayer;
 
-    // AOS Init
-    AOS.init({ duration: 800 });
+        // --- INITIALIZE ---
+        async function init() {
+            try {
+                // Video Player Initialization
+                vPlayer = videojs('v-player');
+                AOS.init({ duration: 800 });
 
-    async function init() {
-        try {
-            const res = await fetch("https://api.npoint.io/56fc751c2191cd12b672");
-            allMovies = await res.json();
-            
-            heroItems = allMovies.filter(m => !m.cat || m.cat.trim() === "");
-            gridItems = allMovies.filter(m => m.cat && m.cat.trim() !== "");
+                const res = await fetch("https://api.npoint.io/56fc751c2191cd12b672");
+                allMovies = await res.json();
+                
+                // No cat = Slider, With cat = Grid
+                heroItems = allMovies.filter(m => !m.cat || m.cat.trim() === "");
+                gridItems = allMovies.filter(m => m.cat && m.cat.trim() !== "");
 
-            renderSlider();
-            renderFilters();
-            renderGrid(gridItems);
-            startAutoSlide();
-            
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
-        } catch (e) { console.error("Load Error", e); }
-    }
-
-    // --- PLAYER LOGIC (ArtPlayer - Best for Streaming) ---
-    function openPlayer(url) {
-        if(!url) return;
-        document.getElementById('playerModal').style.display = 'flex';
-
-        // Pehle purane player ko destroy karein memory saaf karne ke liye
-        if (art) art.destroy();
-
-        art = new ArtPlayer({
-            container: '#v-player',
-            url: url,
-            type: url.includes('.m3u8') ? 'm3u8' : (url.includes('.mpd') ? 'mpd' : 'mp4'),
-            customType: {
-                m3u8: function(video, url) {
-                    if (Hls.isSupported()) {
-                        const hls = new Hls();
-                        hls.loadSource(url);
-                        hls.attachMedia(video);
-                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                        video.src = url;
-                    }
-                },
-                mpd: function(video, url) {
-                    const dash = dashjs.MediaPlayer().create();
-                    dash.initialize(video, url, true);
-                }
-            },
-            autoplay: true,
-            pip: true,
-            fullscreen: true,
-            setting: true,
-            playbackRate: true,
-            aspectRatio: true,
-            subtitleOffset: true,
-            miniProgressBar: true,
-            mutex: true,
-            backdrop: true,
-            playsInline: true,
-            autoSize: true,
-            theme: '#E50914', // Aapka Red Accent
-        });
-    }
-
-    function closePlayer() {
-        if (art) art.destroy();
-        document.getElementById('playerModal').style.display = 'none';
-    }
-
-    // --- SLIDER LOGIC ---
-    function renderSlider() {
-        const wrapper = document.getElementById('sliderWrapper');
-        const dots = document.getElementById('sliderDots');
-        if(!wrapper || heroItems.length === 0) return;
-
-        wrapper.innerHTML = heroItems.map(m => `
-            <div class="slide">
-                <img src="${m.logo}">
-                <div class="slide-content">
-                    <h1>${m.name}</h1>
-                    <button class="btn-watch-main" onclick="openPlayer('${m.url}')">
-                       <i class="fa fa-play"></i> &nbsp; WATCH NOW
-                    </button>
-                </div>
-            </div>`).join('');
-        dots.innerHTML = heroItems.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>`).join('');
-    }
-
-    function goToSlide(index) {
-        currentIndex = index;
-        const wrapper = document.getElementById('sliderWrapper');
-        if(wrapper) wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
-        document.querySelectorAll('.dot').forEach((d, i) => d.className = i === currentIndex ? 'dot active' : 'dot');
-    }
-
-    function startAutoSlide() { 
-        setInterval(() => { 
-            if(heroItems.length > 0) {
-                currentIndex = (currentIndex + 1) % heroItems.length; 
-                goToSlide(currentIndex); 
+                renderSlider();
+                renderFilters();
+                renderGrid(gridItems);
+                startAutoSlide();
+                
+                // Set initial theme icon
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
+            } catch (e) { 
+                console.error("Data Load Error", e); 
             }
-        }, 8000); 
-    }
+        }
 
-    function renderGrid(data) {
-        const grid = document.getElementById('movieGrid');
-        grid.innerHTML = data.map(m => `
-            <div class="movie-card" onclick="openPlayer('${m.url}')">
-                <div class="quality-tag">${m.quality || 'HD'}</div>
-                <img src="${m.logo}" loading="lazy">
-                <div class="card-info">
-                    <span class="card-genre">${m.cat || 'General'}</span>
-                    <h4>${m.name}</h4>
-                </div>
-            </div>`).join('');
-    }
+        // --- SLIDER LOGIC ---
+        function renderSlider() {
+            const wrapper = document.getElementById('sliderWrapper');
+            const dots = document.getElementById('sliderDots');
+            if(!wrapper || heroItems.length === 0) return;
 
-    function renderFilters() {
-        const wrapper = document.getElementById('filterWrapper');
-        const cats = [...new Set(gridItems.map(m => m.cat))];
-        cats.forEach(c => wrapper.innerHTML += `<div class="filter-chip" onclick="filterData('${c}', this)">${c}</div>`);
-    }
+            wrapper.innerHTML = heroItems.map(m => `
+                <div class="slide">
+                    <img src="${m.logo}">
+                    <div class="slide-content">
+                        <h1>${m.name}</h1>
+                        <p>Platinum Exclusive • ${m.cat || 'Trending'}</p>
+                        <button class="btn-watch-main" onclick="openPlayer('${m.url}')">
+                           <i class="fa fa-play"></i> &nbsp; Watch Now
+                        </button>
+                    </div>
+                </div>`).join('');
 
-    function filterData(cat, el) {
-        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('movieGridAnchor').scrollIntoView({ behavior: 'smooth' });
-        const filtered = cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat);
-        renderGrid(filtered);
-    }
+            dots.innerHTML = heroItems.map((_, i) => `
+                <div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>
+            `).join('');
+        }
 
-    function searchMovies() {
-        const term = document.getElementById('searchInput').value.toLowerCase();
-        renderGrid(gridItems.filter(m => (m.name || "").toLowerCase().includes(term)));
-    }
+        function goToSlide(index) {
+            currentIndex = index;
+            const wrapper = document.getElementById('sliderWrapper');
+            const dots = document.querySelectorAll('.dot');
+            if(wrapper) wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
+            dots.forEach((d, i) => d.className = i === currentIndex ? 'dot active' : 'dot');
+        }
 
-    function toggleTheme() {
-        const html = document.documentElement;
-        const isDark = html.getAttribute('data-theme') === 'dark';
-        html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-        document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-    }
+        function startAutoSlide() { 
+            setInterval(() => { 
+                if(heroItems.length > 0) {
+                    currentIndex = (currentIndex + 1) % heroItems.length; 
+                    goToSlide(currentIndex); 
+                }
+            }, 8000); 
+        }
 
-    function toggleSidebar() { 
-        const side = document.getElementById('sidebar');
-        const over = document.getElementById('overlay');
-        side.classList.toggle('open');
-        over.style.display = side.classList.contains('open') ? 'block' : 'none';
-    }
+        // --- GRID LOGIC ---
+        function renderGrid(data) {
+            const grid = document.getElementById('movieGrid');
+            grid.classList.remove('grid-anim');
+            void grid.offsetWidth; 
+            grid.classList.add('grid-anim');
+            
+            grid.innerHTML = data.map(m => `
+                <div class="movie-card" onclick="openPlayer('${m.url}')">
+                    <img src="${m.logo}" loading="lazy">
+                    <div class="card-info">
+                        <span class="card-genre">${m.cat || 'General'}</span>
+                        <h4>${m.name}</h4>
+                        <div class="quality-tag">${m.quality || 'HD'}</div>
+                    </div>
+                </div>`).join('');
+        }
 
-    init();
-</script>
+        function renderFilters() {
+            const wrapper = document.getElementById('filterWrapper');
+            const cats = [...new Set(gridItems.map(m => m.cat))];
+            cats.forEach(c => {
+                if(c) wrapper.innerHTML += `<div class="filter-chip" onclick="filterData('${c}', this)">${c}</div>`;
+            });
+        }
+
+        function filterData(cat, el) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            
+            // ✅ AUTO SCROLL TO GRID
+            document.querySelector('.container').scrollIntoView({ behavior: 'smooth' });
+
+            const filtered = cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat);
+            renderGrid(filtered);
+        }
+
+        // --- UI & PLAYER ---
+        function searchMovies() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+        }
+
+        function openPlayer(url) {
+            if(!url) return;
+            document.getElementById('playerModal').style.display = 'flex';
+            
+            let type = 'application/x-mpegURL';
+            if(url.includes('.mp4')) type = 'video/mp4';
+            if(url.includes('.mpd')) type = 'application/dash+xml';
+
+            vPlayer.ready(function() {
+                vPlayer.src({ src: url, type: type });
+                vPlayer.play().catch(e => console.log("Playback error or blocked"));
+            });
+        }
+
+        function closePlayer() { 
+            vPlayer.pause(); 
+            document.getElementById('playerModal').style.display = 'none'; 
+        }
+
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('open'); 
+            document.getElementById('overlay').style.display = 
+                document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
+        }
+
+        // Run Init
+        init();
+    </script>
 </body>
 </html>
