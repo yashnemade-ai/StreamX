@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STREAMX | Platinum Edition</title>
+    <title>STREAMX | Shaka Edition</title>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- CSS Libraries -->
+    <!-- AOS for Scroll Animations -->
     <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
-    <!-- Shaka Player Default UI CSS (Optional but good for icons) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/controls.min.css">
+
+    <!-- Shaka Player CSS & JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
 
     <style>
         :root {
@@ -21,9 +22,9 @@
             --card-bg: #0d0d0f;
             --text: #ffffff;
             --text-dim: #b3b3b3;
-            --accent: #FF3B30;
+            --accent: #E50914;
             --border: #1a1a1a;
-            --shadow: rgba(255, 59, 48, 0.2);
+            --shadow: rgba(229, 9, 20, 0.2);
         }
 
         [data-theme="light"] {
@@ -32,7 +33,7 @@
             --card-bg: #ffffff;
             --text: #1a1a1f;
             --text-dim: #6c757d;
-            --accent: #FF3B30;
+            --accent: #E50914;
             --border: #e9ecef;
             --shadow: rgba(0, 0, 0, 0.1);
         }
@@ -46,11 +47,11 @@
             padding: 12px 6%; background: var(--nav-bg);
             position: fixed; width: 100%; top: 0; z-index: 1000;
             border-bottom: 2px solid var(--border);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         .nav-left { display: flex; align-items: center; gap: 20px; }
-        .logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; cursor: pointer; text-transform: uppercase; display: flex; }
+        .logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; cursor: pointer; }
         .logo span.red { color: var(--accent); }
-        .logo span.white { color: #ffffff !important; }
         
         .nav-right { display: flex; align-items: center; gap: 20px; }
         .search-box {
@@ -59,32 +60,48 @@
         }
         .search-box input { background: transparent; border: none; color: var(--text); outline: none; width: 180px; font-size: 14px; font-weight: 500; }
         
-        .theme-btn { font-size: 22px; cursor: pointer; color: var(--text); background: none; border: none; transition: 0.3s; }
+        .theme-btn { 
+            font-size: 22px; cursor: pointer; color: var(--text); 
+            background: none; border: none; display: flex; align-items: center;
+            transition: 0.3s;
+        }
 
         /* --- HERO SLIDER --- */
-        .slider-container { width: 100%; height: 75vh; margin-top: 65px; position: relative; overflow: hidden; background: #000; }
-        .slider-wrapper { display: flex; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.45, 0, 0.55, 1); }
+        .slider-container {
+            width: 100%; height: 75vh; margin-top: 68px; position: relative;
+            overflow: hidden; background: #000;
+        }
+        .slider-wrapper {
+            display: flex; width: 100%; height: 100%;
+            transition: transform 0.8s cubic-bezier(0.45, 0, 0.55, 1);
+        }
         .slide { min-width: 100%; height: 100%; position: relative; }
         .slide img { width: 100%; height: 100%; object-fit: 100% 100%; }
         
         .slide-content {
             position: absolute; bottom: 0; left: 0; width: 100%;
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, transparent 100%);
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, rgba(0,0,0,0.4) 50%, transparent 100%);
             padding: 60px 6%; text-align: left; z-index: 10;
         }
-        .slide-content h1 { font-size: clamp(30px, 5vw, 55px); font-weight: 900; color: #ffffff !important; margin-bottom: 15px; text-shadow: 2px 2px 15px rgba(0,0,0,0.5); }
-        .slide-content p { font-size: 18px; color: #eeeeee !important; margin-bottom: 25px; opacity: 0.9; }
-
-        /* Watch Now Button */
-        .btn-watch-main {
-            background: var(--accent) !important; color: #ffffff !important;
-            padding: 12px 35px; border: none; border-radius: 8px;
-            font-weight: 800; cursor: pointer; font-size: 16px;
-            display: inline-flex; align-items: center; gap: 10px; transition: 0.3s;
-            text-decoration: none;
+        .slide-content h1 { 
+            font-size: clamp(30px, 5vw, 55px); 
+            font-weight: 900; 
+            color: #ffffff !important; 
+            margin-bottom: 10px; 
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
         }
 
-        .slider-dots { position: absolute; bottom: 25px; width: 100%; display: flex; justify-content: center; gap: 10px; z-index: 20; }
+        .slide-content p { 
+            font-size: 18px; 
+            color: #eeeeee !important; 
+            margin-bottom: 25px; 
+            opacity: 0.9;
+        }
+
+        .slider-dots {
+            position: absolute; bottom: 25px; width: 100%;
+            display: flex; justify-content: center; gap: 10px; z-index: 20;
+        }
         .dot { width: 10px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; transition: 0.4s; }
         .dot.active { background: var(--accent); width: 25px; border-radius: 10px; }
 
@@ -96,32 +113,43 @@
         }
         .filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-        /* --- MOVIE GRID --- */
+        /* --- CARDS --- */
         .container { padding: 30px 6% 100px; }
-        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 25px; transition: 0.5s; }
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 25px; }
+        
         .movie-card { 
             background: var(--card-bg); border-radius: 12px; overflow: hidden; 
             border: 2px solid var(--border); transition: 0.4s; cursor: pointer;
-            position: relative; aspect-ratio: 2/3;
+            position: relative;
         }
         .movie-card:hover { transform: translateY(-12px); border-color: var(--accent); box-shadow: 0 10px 25px var(--shadow); }
-        .movie-card img { width: 100%; height: 100%; object-fit: cover; }
+        .movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
         
-        .card-info { 
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            background: linear-gradient(transparent, rgba(0,0,0,0.95));
-            padding: 20px 10px 10px; text-align: center;
-        }
-        .card-info h4 { font-size: 14px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
-        .card-genre { font-size: 11px; color: var(--accent); font-weight: 800; text-transform: uppercase; }
-
+        .card-info { padding: 15px; }
+        .card-info h4 { font-size: 14px; font-weight: 800; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-genre { font-size: 11px; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; display: block; }
         .quality-tag { 
-            position: absolute; top: 10px; right: 10px;
             background: var(--accent); color: white; font-size: 9px; 
-            font-weight: 900; padding: 2px 8px; border-radius: 4px; z-index: 5;
+            font-weight: 900; padding: 2px 8px; border-radius: 4px; display: inline-block;
         }
 
-        /* --- SIDEBAR --- */
+        .btn-watch-main {
+            background: var(--accent) !important;
+            color: #ffffff !important;
+            padding: 12px 35px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        /* SIDEBAR */
         .sidebar {
             position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
             background: var(--nav-bg); z-index: 2000; border-right: 2px solid var(--border);
@@ -129,16 +157,15 @@
         }
         .sidebar.open { left: 0; }
         .sidebar-close { position: absolute; top: 25px; right: 25px; font-size: 28px; cursor: pointer; }
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1500; display: none; }
 
-        /* --- PLAYER MODAL --- */
-        .player-modal { position: fixed; inset: 0; background: #000; display: none; justify-content: center; align-items: center; z-index: 3000; }
+        /* PLAYER MODAL */
+        .player-modal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; }
         .close-player { position: absolute; top: 20px; right: 25px; color: white; font-size: 40px; cursor: pointer; z-index: 3100; }
 
         @media (max-width: 768px) {
             .search-box { display: none; }
-            .slider-container { height: 45vh; }
-            .movie-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+            .slider-container { height: 50vh; }
+            .movie-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
         }
     </style>
 </head>
@@ -154,11 +181,11 @@
                 <i class="fa fa-search" style="opacity:0.5"></i>
                 <input type="text" id="searchInput" placeholder="Search..." oninput="searchMovies()">
             </div>
-            <button class="theme-btn" onclick="toggleTheme()" id="themeBtn"><i class="fa-solid fa-moon"></i></button>
+            <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">
+                <i class="fa-solid fa-moon"></i>
+            </button>
         </div>
     </nav>
-
-    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
     <div class="sidebar" id="sidebar">
         <i class="fa fa-times sidebar-close" onclick="toggleSidebar()"></i>
@@ -181,7 +208,7 @@
         <div class="filter-chip active" onclick="filterData('All', this)">All Content</div>
     </div>
 
-    <div class="container" id="movieGridAnchor">
+    <div class="container">
         <div class="movie-grid" id="movieGrid" data-aos="fade-up"></div>
     </div>
 
@@ -190,42 +217,34 @@
         <video id="v-player" style="width:100%; height:100vh;" autoplay controls></video>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
     <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
-
     <script>
+        AOS.init({ duration: 800 });
+
         let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
         let playerInstance;
 
         // Initialize Shaka Player
-        async function initShaka() {
+        async function initPlayer() {
             shaka.polyfill.installAll();
             if (shaka.Player.isBrowserSupported()) {
                 const video = document.getElementById('v-player');
                 playerInstance = new shaka.Player(video);
                 
-                // Config for better HLS/DASH support
-                playerInstance.configure({
-                    streaming: { bufferingGoal: 30 }
-                });
-
+                // Error handling
                 playerInstance.addEventListener('error', (event) => {
                     console.error('Error code', event.detail.code, 'object', event.detail);
                 });
             } else {
-                alert('Your browser does not support modern video playback!');
+                console.error('Browser not supported!');
             }
         }
 
-        async function initApp() {
+        async function init() {
             try {
-                await initShaka();
-                AOS.init({ duration: 800 });
-
+                await initPlayer();
                 const res = await fetch("https://api.npoint.io/56fc751c2191cd12b672");
                 allMovies = await res.json();
-                
                 heroItems = allMovies.filter(m => !m.cat || m.cat.trim() === "");
                 gridItems = allMovies.filter(m => m.cat && m.cat.trim() !== "");
 
@@ -236,7 +255,7 @@
                 
                 const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
                 document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
-            } catch (e) { console.error("Data Load Error"); }
+            } catch (e) { console.error("Load Error"); }
         }
 
         function renderSlider() {
@@ -264,17 +283,17 @@
             dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
         }
 
-        function startAutoSlide() { setInterval(() => { currentIndex = (currentIndex + 1) % heroItems.length; goToSlide(currentIndex); }, 8000); }
+        function startAutoSlide() { setInterval(() => { currentIndex = (currentIndex + 1) % heroItems.length; goToSlide(currentIndex); }, 7000); }
 
         function renderGrid(data) {
             const grid = document.getElementById('movieGrid');
             grid.innerHTML = data.map(m => `
                 <div class="movie-card" onclick="openPlayer('${m.url}')">
-                    <div class="quality-tag">${m.quality || 'HD'}</div>
                     <img src="${m.logo}" loading="lazy">
                     <div class="card-info">
-                        <span class="card-genre">${m.cat}</span>
+                        <span class="card-genre">${m.cat || 'General'}</span>
                         <h4>${m.name}</h4>
+                        <div class="quality-tag">${m.quality || 'HD'}</div>
                     </div>
                 </div>`).join('');
         }
@@ -288,45 +307,17 @@
         function filterData(cat, el) {
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
-            document.getElementById('movieGridAnchor').scrollIntoView({ behavior: 'smooth' });
             const filtered = cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat);
             renderGrid(filtered);
+            document.querySelector('.container').scrollIntoView({ behavior: 'smooth' });
         }
 
-        async function openPlayer(url) {
-            if (!url) return;
-            document.getElementById('playerModal').style.display = 'flex';
-
-            // ClearKey DRM Handling (Format: url|drmLicense=KID:KEY)
-            const decodedUrl = decodeURIComponent(url);
-            const parts = decodedUrl.split("|");
-            let streamUrl = parts[0];
-            let drmKey = "";
-
-            parts.forEach(p => {
-                if (p.includes("drmLicense=")) drmKey = p.replace("drmLicense=", "");
-            });
-
-            if (drmKey.includes(":")) {
-                const [kid, key] = drmKey.split(":");
-                playerInstance.configure({
-                    drm: { clearKeys: { [kid]: key } }
-                });
-            }
-
-            try {
-                await playerInstance.load(streamUrl);
-                document.getElementById('v-player').play();
-            } catch (e) {
-                console.error("Playback failed", e);
-            }
-        }
-
-        function closePlayer() {
-            const video = document.getElementById('v-player');
-            video.pause();
-            playerInstance.unload();
-            document.getElementById('playerModal').style.display = 'none';
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
         }
 
         function searchMovies() {
@@ -334,21 +325,28 @@
             renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
         }
 
-        function toggleTheme() {
-            const html = document.documentElement;
-            const isDark = html.getAttribute('data-theme') === 'dark';
-            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-            document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+        // ✅ SHAKA PLAYER OPEN LOGIC
+        async function openPlayer(url) {
+            if(!url) return;
+            document.getElementById('playerModal').style.display = 'block';
+            try {
+                await playerInstance.load(url);
+                console.log('The video has now been loaded!');
+            } catch (e) {
+                console.error('Error loading link into Shaka Player', e);
+            }
         }
 
-        function toggleSidebar() { 
-            const side = document.getElementById('sidebar');
-            const over = document.getElementById('overlay');
-            side.classList.toggle('open');
-            over.style.display = side.classList.contains('open') ? 'block' : 'none';
+        async function closePlayer() {
+            const video = document.getElementById('v-player');
+            video.pause();
+            await playerInstance.unload(); // Memory clear
+            document.getElementById('playerModal').style.display = 'none';
         }
 
-        window.onload = initApp;
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+        init();
     </script>
 </body>
 </html>
