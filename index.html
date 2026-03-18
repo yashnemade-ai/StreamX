@@ -325,17 +325,22 @@
             renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
         }
 
-        // ✅ SHAKA PLAYER OPEN LOGIC
-        async function openPlayer(url) {
-            if(!url) return;
-            document.getElementById('playerModal').style.display = 'block';
-            try {
-                await playerInstance.load(url);
-                console.log('The video has now been loaded!');
-            } catch (e) {
-                console.error('Error loading link into Shaka Player', e);
-            }
-        }
+       const PROXY_URL = window.location.origin + "/api/proxy?url=";
+
+async function openPlayer(url) {
+    if(!url) return;
+    document.getElementById('playerModal').style.display = 'block';
+
+    try {
+        // ✅ Proxy ke zariye link load karna (Fixes CORS/Black Screen)
+        const finalUrl = PROXY_URL + encodeURIComponent(url);
+        
+        await playerInstance.load(finalUrl);
+        console.log('Video loaded via Vercel Backend!');
+    } catch (e) {
+        console.error('Error loading link', e);
+    }
+}
 
         async function closePlayer() {
             const video = document.getElementById('v-player');
