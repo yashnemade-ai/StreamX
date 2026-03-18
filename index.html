@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STREAMX | Platinum Edition</title>
+    <title>STREAMX</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- ArtPlayer & Engines -->
-    <script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dashjs@latest/dist/dash.all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <style>
         :root {
@@ -178,7 +176,6 @@
     <script>
         let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
         let art;
-        const BACKEND_URL = "http://YOUR_VPS_IP:5000/proxy?url="; // Change to your IP
 
         async function init() {
             try {
