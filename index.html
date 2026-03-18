@@ -325,33 +325,66 @@
             renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
         }
 
-       const PROXY_URL = window.location.origin + "/api/proxy?url=";
+// ✅ Final Pro Shaka Player Logic
+const PROXY_URL = window.location.origin + "/api/proxy?url=";
+let playerInstance;
+
+async function initPlayer() {
+    shaka.polyfill.installAll();
+    if (!shaka.Player.isBrowserSupported()) {
+        console.error('Browser not supported!');
+        return;
+    }
+    const video = document.getElementById('v-player');
+    playerInstance = new shaka.Player(video);
+    
+    // Error Handling
+    playerInstance.addEventListener('error', (e) => console.error('Error code', e.detail.code));
+}
 
 async function openPlayer(url) {
-    if(!url) return;
-    document.getElementById('playerModal').style.display = 'block';
+    if (!url) return;
+    document.getElementById('playerModal').style.display = 'flex';
+
+    // 1. URL aur DRM Params nikaalna (| format fix)
+    const decodedUrl = url.replace(/%7C/g, "|");
+    const parts = decodedUrl.split("|");
+    let streamUrl = parts[0];
+    let drmKey = "";
+
+    // 2. ClearKey Parser (For SunNXT/DASH)
+    parts.forEach(p => {
+        if (p.includes("drmLicense=")) drmKey = p.replace("drmLicense=", "");
+    });
+
+    if (drmKey.includes(":")) {
+        const [kid, key] = drmKey.split(":");
+        // Shaka ko ClearKey batana
+        playerInstance.configure({
+            drm: {
+                clearKeys: { [kid]: key }
+            }
+        });
+    }
 
     try {
-        // ✅ Proxy ke zariye link load karna (Fixes CORS/Black Screen)
-        const finalUrl = PROXY_URL + encodeURIComponent(url);
-        
+        // 3. Backend Proxy ke saath load karna
+        const finalUrl = PROXY_URL + encodeURIComponent(streamUrl);
         await playerInstance.load(finalUrl);
-        console.log('Video loaded via Vercel Backend!');
+        document.getElementById('v-player').play();
     } catch (e) {
-        console.error('Error loading link', e);
+        console.error("Link failed to load in Shaka", e);
+        alert("Media failed to load. Check link or Proxy.");
     }
 }
 
-        async function closePlayer() {
-            const video = document.getElementById('v-player');
-            video.pause();
-            await playerInstance.unload(); // Memory clear
-            document.getElementById('playerModal').style.display = 'none';
-        }
-
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-
-        init();
+function closePlayer() {
+    const video = document.getElementById('v-player');
+    video.pause();
+    playerInstance.unload();
+    document.getElementById('playerModal').style.display = 'none';
+}
+     init();
     </script>
 </body>
 </html>
