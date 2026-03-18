@@ -1,26 +1,57 @@
-from flask import Flask, request, Response
-import requests
+let shakaPlayer;
 
-app = Flask(__name__)
+async function openPlayer(url) {
+    if (!url) return;
 
-@app.route('/proxy')
-def proxy():
-    url = request.args.get('url')
-    if not url:
-        return "No URL provided", 400
+    const video = document.getElementById('v-player');
+    document.getElementById('playerModal').style.display = 'flex';
 
-    headers = {
-        "User-Agent": "Mozilla/5.0"
+    // Reset video
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+
+    // Destroy previous Shaka instance
+    if (shakaPlayer) {
+        await shakaPlayer.destroy();
+        shakaPlayer = null;
     }
 
-    r = requests.get(url, headers=headers, stream=True)
+    try {
+        // 🔥 MPD (DASH) → Shaka
+        if (url.includes('.mpd')) {
+            shakaPlayer = new shaka.Player(video);
 
-    def generate():
-        for chunk in r.iter_content(chunk_size=1024):
-            if chunk:
-                yield chunk
+            shakaPlayer.addEventListener('error', function (e) {
+                console.error("Shaka error:", e);
+            });
 
-    return Response(generate(), content_type=r.headers.get('Content-Type'))
+            await shakaPlayer.load(url);
+            video.play();
 
-if __name__ == "__main__":
-    app.run(debug=True)
+        }
+        // 🔥 M3U8 → HLS.js
+        else if (url.includes('.m3u8')) {
+            if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                    video.play();
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+                video.play();
+            }
+        }
+        // 🔥 MP4 direct
+        else {
+            video.src = url;
+            video.play();
+        }
+
+    } catch (error) {
+        console.error("Playback failed:", error);
+        alert("Video play nahi ho rahi");
+    }
+}
