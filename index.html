@@ -3,42 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STREAMX </title>
+    <title>STREAMX | Platinum Edition</title>
     
-    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Video.js -->
-    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
-    <!-- AOS for Scroll Animations -->
-    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <!-- ArtPlayer & Engines -->
+    <script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dashjs@latest/dist/dash.all.min.js"></script>
 
     <style>
         :root {
             --bg: #050505;
             --nav-bg: #000000;
-            --card-bg: #0d0d0f;
+            --card-bg: #121212;
             --text: #ffffff;
-            --text-dim: #b3b3b3;
-            --accent: #E50914;
+            --accent: #FF3B30;
             --border: #1a1a1a;
-            --shadow: rgba(229, 9, 20, 0.2);
         }
 
         [data-theme="light"] {
-            --bg: #f8f9fa;
+            --bg: #f2f2f7;
             --nav-bg: #ffffff;
             --card-bg: #ffffff;
-            --text: #1a1a1f;
-            --text-dim: #6c757d;
-            --accent: #E50914;
-            --border: #e9ecef;
-            --shadow: rgba(0, 0, 0, 0.1);
+            --text: #1d1d1f;
+            --accent: #FF3B30;
+            --border: #e2e2e7;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-        body { background-color: var(--bg); color: var(--text); overflow-x: hidden; transition: background 0.4s; }
+        body { background-color: var(--bg); color: var(--text); overflow-x: hidden; transition: 0.3s; }
+
+        /* --- LOGO --- */
+        .logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; }
+        .logo span.red { color: var(--accent); }
+        .logo span.white { color: #ffffff !important; }
 
         /* --- NAVBAR --- */
         nav {
@@ -46,149 +46,83 @@
             padding: 12px 6%; background: var(--nav-bg);
             position: fixed; width: 100%; top: 0; z-index: 1000;
             border-bottom: 2px solid var(--border);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-        .nav-left { display: flex; align-items: center; gap: 20px; }
-        .logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; cursor: pointer; }
-        .logo span.red { color: var(--accent); }
-        
-        .nav-right { display: flex; align-items: center; gap: 20px; }
+        .nav-right { display: flex; align-items: center; gap: 15px; }
         .search-box {
-            background: var(--bg); border: 2px solid var(--border);
-            padding: 8px 15px; border-radius: 10px; display: flex; align-items: center;
+            background: var(--bg); border: 1.5px solid var(--border);
+            padding: 7px 15px; border-radius: 10px; display: flex; align-items: center;
         }
-        .search-box input { background: transparent; border: none; color: var(--text); outline: none; width: 180px; font-size: 14px; font-weight: 500; }
-        
-        /* THEME BUTTON ANIMATION */
-        .theme-btn { 
-            font-size: 22px; cursor: pointer; color: var(--text); 
-            background: none; border: none; display: flex; align-items: center;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .theme-btn:active { transform: rotate(180deg) scale(1.2); }
+        .search-box input { background: transparent; border: none; color: var(--text); outline: none; width: 160px; }
+        .theme-btn { font-size: 20px; cursor: pointer; color: var(--text); background: none; border: none; }
 
-        /* --- HERO SLIDER (ONE AT A TIME) --- */
-        .slider-container {
-            width: 100%; height: 75vh; margin-top: 68px; position: relative;
-            overflow: hidden; background: #000;
+        /* --- SIDEBAR --- */
+        .sidebar {
+            position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
+            background: var(--nav-bg); z-index: 2000; border-right: 2px solid var(--border);
+            padding: 40px 25px; transition: 0.5s;
         }
-        .slider-wrapper {
-            display: flex; width: 100%; height: 100%;
-            transition: transform 0.8s cubic-bezier(0.45, 0, 0.55, 1);
-        }
+        .sidebar.open { left: 0; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1500; display: none; }
+
+        /* --- SLIDER --- */
+        .slider-container { width: 100%; height: 78vh; margin-top: 60px; position: relative; overflow: hidden; background: #000; }
+        .slider-wrapper { display: flex; width: 100%; height: 100%; transition: transform 0.6s ease-in-out; }
         .slide { min-width: 100%; height: 100%; position: relative; }
         .slide img { width: 100%; height: 100%; object-fit: 100% 100%; }
         
         .slide-content {
-    position: absolute; 
-    bottom: 0; 
-    left: 0; 
-    width: 100%;
-    /* Gradient ko thoda gehra kiya taaki white text Day mode mein bhi saaf dikhe */
-    background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, rgba(0,0,0,0.4) 50%, transparent 100%);
-    padding: 60px 6%; 
-    text-align: left; 
-    z-index: 10;
-}
-
-/* ✅ In dono lines ko dhyan se dekhein: Isse Day mode mein bhi text White rahega */
-.slide-content h1 { 
-    font-size: clamp(30px, 5vw, 55px); 
-    font-weight: 900; 
-    color: #ffffff !important; /* Hamesha White */
-    margin-bottom: 10px; 
-    text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-}
-
-.slide-content p { 
-    font-size: 18px; 
-    color: #eeeeee !important; /* Hamesha Light Gray/White */
-    margin-bottom: 25px; 
-    opacity: 0.9;
-    text-shadow: 1px 1px 5px rgba(0,0,0,0.5);
-}
-
-        .slider-dots {
-            position: absolute; bottom: 25px; width: 100%;
-            display: flex; justify-content: center; gap: 10px; z-index: 20;
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, transparent 100%);
+            padding: 50px 6%; text-align: left; z-index: 10;
         }
-        .dot { width: 10px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; transition: 0.4s; }
+        .slide-content h1 { font-size: clamp(30px, 5vw, 55px); font-weight: 900; color: #ffffff !important; margin-bottom: 15px; }
+        
+        .btn-watch-main {
+            background: var(--accent) !important; color: #ffffff !important;
+            padding: 14px 40px; border: none; border-radius: 8px;
+            font-weight: 800; cursor: pointer; font-size: 16px;
+            display: inline-flex; align-items: center; gap: 10px;
+        }
+
+        .slider-dots { position: absolute; bottom: 25px; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 20; }
+        .dot { width: 10px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; }
         .dot.active { background: var(--accent); width: 25px; border-radius: 10px; }
 
-        /* --- CATEGORIES & ANIMATION --- */
-        .filter-container { padding: 35px 6% 0; display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
+        /* --- FILTERS --- */
+        .filter-container { padding: 35px 6% 0; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; }
         .filter-chip {
-            padding: 10px 28px; background: var(--card-bg); border: 2px solid var(--border);
+            padding: 10px 22px; background: var(--card-bg); border: 1.5px solid var(--border);
             border-radius: 8px; cursor: pointer; font-weight: 700; white-space: nowrap; transition: 0.3s;
         }
-        .filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.05); }
-
-        /* Grid transition effect */
-        .grid-anim { animation: gridFade 0.5s ease; }
-        @keyframes gridFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
         /* --- CARDS --- */
         .container { padding: 30px 6% 100px; }
-        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 25px; }
-        
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
         .movie-card { 
             background: var(--card-bg); border-radius: 12px; overflow: hidden; 
-            border: 2px solid var(--border); transition: 0.4s; cursor: pointer;
-            position: relative;
+            border: 2px solid var(--border); transition: 0.3s; cursor: pointer;
+            position: relative; aspect-ratio: 2/3;
         }
-        .movie-card:hover { 
-            transform: translateY(-12px); 
-            border-color: var(--accent);
-            box-shadow: 0 10px 25px var(--shadow);
-        }
-        .movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
+        .movie-card:hover { transform: translateY(-8px); border-color: var(--accent); }
+        .movie-card img { width: 100%; height: 100%; object-fit: cover; }
         
-        .card-info { padding: 15px; }
-        .card-info h4 { font-size: 14px; font-weight: 800; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .card-genre { font-size: 11px; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; display: block; }
-        .quality-tag { 
-            background: var(--accent); color: white; font-size: 9px; 
-            font-weight: 900; padding: 2px 8px; border-radius: 4px; display: inline-block;
+        .card-info {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: linear-gradient(transparent, rgba(0,0,0,0.95));
+            padding: 20px 10px 10px; text-align: center;
         }
-        /* ✅ Naya Unique Style Watch Now Button ke liye */
-.btn-watch-main {
-    background: var(--accent) !important;
-    color: #ffffff !important;
-    padding: 12px 35px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 800;
-    cursor: pointer;
-    font-size: 16px;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    transition: 0.3s;
-    text-transform: uppercase;
-}
+        .card-info h4 { font-size: 13px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .card-cat { font-size: 10px; color: var(--accent); font-weight: 700; text-transform: uppercase; }
 
-.btn-watch-main:hover {
-    transform: scale(1.05);
-    filter: brightness(1.2);
-}
-
-        /* SIDEBAR */
-        .sidebar {
-            position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
-            background: var(--nav-bg); z-index: 2000; border-right: 2px solid var(--border);
-            padding: 40px 30px; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .sidebar.open { left: 0; }
-        .sidebar-close { position: absolute; top: 25px; right: 25px; font-size: 28px; cursor: pointer; }
-
-        /* PLAYER */
-        .player-modal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; }
-        .close-player { position: absolute; top: 20px; right: 25px; color: white; font-size: 40px; cursor: pointer; z-index: 3100; }
+        /* --- PLAYER MODAL --- */
+        #playerModal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; align-items: center; justify-content: center; }
+        #v-player { width: 100%; height: 100vh; }
+        .close-player { position: absolute; top: 20px; right: 25px; color: white; font-size: 40px; cursor: pointer; z-index: 3100; line-height: 1; }
 
         @media (max-width: 768px) {
             .search-box { display: none; }
-            .slider-container { height: 50vh; }
-            .movie-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .slider-container { height: 45vh; }
         }
     </style>
 </head>
@@ -204,13 +138,24 @@
                 <i class="fa fa-search" style="opacity:0.5"></i>
                 <input type="text" id="searchInput" placeholder="Search..." oninput="searchMovies()">
             </div>
-            <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">
-                <i class="fa-solid fa-moon"></i>
-            </button>
+            <button class="theme-btn" onclick="toggleTheme()" id="themeBtn"><i class="fa-solid fa-moon"></i></button>
         </div>
     </nav>
 
-    
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <i class="fa fa-times" style="position:absolute; top:20px; right:20px; cursor:pointer; font-size:25px;" onclick="toggleSidebar()"></i>
+        <div class="logo" style="margin-bottom:40px"><span class="red">STREAM</span><span class="white">X</span></div>
+        <div style="font-size:15px; color:var(--text-dim); line-height:1.8">
+            <p style="color:var(--text); font-weight:900; font-size:18px; margin-bottom:10px">ABOUT INFO</p>
+            <p>Developed by: <b>Yash</b></p>
+            <p>Support: <a href="mailto:support@streamx.com" style="color:var(--accent); text-decoration:none">support@streamx.com</a></p>
+            <hr style="margin:20px 0; opacity:0.1">
+            <p>© 2026 STREAMX. All rights reserved.</p>
+        </div>
+    </div>
 
     <section class="slider-container">
         <div class="slider-wrapper" id="sliderWrapper"></div>
@@ -219,47 +164,27 @@
 
     <div class="filter-container" id="filterWrapper">
         <div class="filter-chip active" onclick="filterData('All', this)">All Content</div>
-    </div><!-- SIDEBAR -->
-    <div class="sidebar" id="sidebar">
-        <i class="fa fa-times sidebar-close" onclick="toggleSidebar()"></i>
-        <div class="logo" style="margin-bottom:40px"><span class="red">STREAM</span><span class="white">X</span></div>
-        <div style="font-size:15px; color:var(--text-dim); line-height:1.8">
-            <p style="color:var(--text); font-weight:900; font-size:18px; margin-bottom:10px">ABOUT INFO</p>
-            <p>Developed by: <b>Yash</b></p>
-            <p>Support: <a href="mailto:support@streamx.com" style="color:var(--accent); text-decoration:none">support@streamx.com</a></p>
-            <hr style="margin:20px 0; opacity:0.1">
-            <p style="margin-top: 20px; font-size: 12px; opacity: 0.5;">© 2026 STREAMX. All rights reserved.</p>
-        </div>
     </div>
 
-
-    <div class="container">
-        <div class="movie-grid" id="movieGrid" data-aos="fade-up"></div>
+    <div class="container" id="movieGridAnchor">
+        <div class="movie-grid" id="movieGrid"></div>
     </div>
 
-    <div class="player-modal" id="playerModal">
+    <div id="playerModal">
         <span class="close-player" onclick="closePlayer()">&times;</span>
-        <video id="v-player" class="video-js vjs-big-play-centered" controls preload="auto" style="width:100%; height:100vh;"></video>
+        <div id="v-player"></div>
     </div>
-
-<!-- 1. All Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
 
     <script>
         let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
-        let vPlayer;
+        let art;
+        const BACKEND_URL = "http://YOUR_VPS_IP:5000/proxy?url="; // Change to your IP
 
-        // --- INITIALIZE ---
         async function init() {
             try {
-                // Video Player Initialization
-                vPlayer = videojs('v-player');
-                AOS.init({ duration: 800 });
-
                 const res = await fetch("https://api.npoint.io/56fc751c2191cd12b672");
                 allMovies = await res.json();
                 
-                // No cat = Slider, With cat = Grid
                 heroItems = allMovies.filter(m => !m.cat || m.cat.trim() === "");
                 gridItems = allMovies.filter(m => m.cat && m.cat.trim() !== "");
 
@@ -267,69 +192,72 @@
                 renderFilters();
                 renderGrid(gridItems);
                 startAutoSlide();
-                
-                // Set initial theme icon
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
-            } catch (e) { 
-                console.error("Data Load Error", e); 
-            }
+            } catch (e) { console.error("Error loading data"); }
         }
 
-        // --- SLIDER LOGIC ---
         function renderSlider() {
             const wrapper = document.getElementById('sliderWrapper');
             const dots = document.getElementById('sliderDots');
-            if(!wrapper || heroItems.length === 0) return;
-
+            if(heroItems.length === 0) return;
             wrapper.innerHTML = heroItems.map(m => `
                 <div class="slide">
                     <img src="${m.logo}">
                     <div class="slide-content">
                         <h1>${m.name}</h1>
-                        <p>Platinum Exclusive • ${m.cat || 'Trending'}</p>
                         <button class="btn-watch-main" onclick="openPlayer('${m.url}')">
-                           <i class="fa fa-play"></i> &nbsp; Watch Now
+                            <i class="fa fa-play"></i> &nbsp; WATCH NOW
                         </button>
                     </div>
                 </div>`).join('');
-
-            dots.innerHTML = heroItems.map((_, i) => `
-                <div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>
-            `).join('');
+            dots.innerHTML = heroItems.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>`).join('');
         }
 
-        function goToSlide(index) {
-            currentIndex = index;
-            const wrapper = document.getElementById('sliderWrapper');
-            const dots = document.querySelectorAll('.dot');
-            if(wrapper) wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
-            dots.forEach((d, i) => d.className = i === currentIndex ? 'dot active' : 'dot');
+        function openPlayer(url) {
+            if(!url) return;
+            document.getElementById('playerModal').style.display = 'flex';
+            
+            const finalUrl = BACKEND_URL + encodeURIComponent(url);
+            if (art) art.destroy();
+
+            art = new ArtPlayer({
+                container: '#v-player',
+                url: finalUrl,
+                type: 'm3u8',
+                customType: {
+                    m3u8: function(video, url) {
+                        if (Hls.isSupported()) {
+                            const hls = new Hls();
+                            hls.loadSource(url);
+                            hls.attachMedia(video);
+                        }
+                    }
+                },
+                autoplay: true,
+                fullscreen: true,
+                setting: true,
+                playbackRate: true,
+                aspectRatio: true,
+                theme: '#FF3B30',
+            });
         }
 
-        function startAutoSlide() { 
-            setInterval(() => { 
-                if(heroItems.length > 0) {
-                    currentIndex = (currentIndex + 1) % heroItems.length; 
-                    goToSlide(currentIndex); 
-                }
-            }, 8000); 
+        function closePlayer() { if(art) art.destroy(); document.getElementById('playerModal').style.display = 'none'; }
+        
+        function filterData(cat, el) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('movieGridAnchor').scrollIntoView({ behavior: 'smooth' });
+            renderGrid(cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat));
         }
 
-        // --- GRID LOGIC ---
         function renderGrid(data) {
             const grid = document.getElementById('movieGrid');
-            grid.classList.remove('grid-anim');
-            void grid.offsetWidth; 
-            grid.classList.add('grid-anim');
-            
             grid.innerHTML = data.map(m => `
                 <div class="movie-card" onclick="openPlayer('${m.url}')">
-                    <img src="${m.logo}" loading="lazy">
+                    <img src="${m.logo}">
                     <div class="card-info">
-                        <span class="card-genre">${m.cat || 'General'}</span>
+                        <span class="card-cat">${m.cat}</span>
                         <h4>${m.name}</h4>
-                        <div class="quality-tag">${m.quality || 'HD'}</div>
                     </div>
                 </div>`).join('');
         }
@@ -337,26 +265,7 @@
         function renderFilters() {
             const wrapper = document.getElementById('filterWrapper');
             const cats = [...new Set(gridItems.map(m => m.cat))];
-            cats.forEach(c => {
-                if(c) wrapper.innerHTML += `<div class="filter-chip" onclick="filterData('${c}', this)">${c}</div>`;
-            });
-        }
-
-        function filterData(cat, el) {
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-            
-            // ✅ AUTO SCROLL TO GRID
-            document.querySelector('.container').scrollIntoView({ behavior: 'smooth' });
-
-            const filtered = cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat);
-            renderGrid(filtered);
-        }
-
-        // --- UI & PLAYER ---
-        function searchMovies() {
-            const term = document.getElementById('searchInput').value.toLowerCase();
-            renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
+            cats.forEach(c => wrapper.innerHTML += `<div class="filter-chip" onclick="filterData('${c}', this)">${c}</div>`);
         }
 
         function toggleTheme() {
@@ -366,33 +275,24 @@
             document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
         }
 
-        function openPlayer(url) {
-            if(!url) return;
-            document.getElementById('playerModal').style.display = 'flex';
-            
-            let type = 'application/x-mpegURL';
-            if(url.includes('.mp4')) type = 'video/mp4';
-            if(url.includes('.mpd')) type = 'application/dash+xml';
-
-            vPlayer.ready(function() {
-                vPlayer.src({ src: url, type: type });
-                vPlayer.play().catch(e => console.log("Playback error or blocked"));
-            });
+        function goToSlide(index) {
+            currentIndex = index;
+            document.getElementById('sliderWrapper').style.transform = `translateX(-${currentIndex * 100}%)`;
+            document.querySelectorAll('.dot').forEach((d, i) => d.className = i === currentIndex ? 'dot active' : 'dot');
         }
 
-        function closePlayer() { 
-            vPlayer.pause(); 
-            document.getElementById('playerModal').style.display = 'none'; 
-        }
-
+        function startAutoSlide() { setInterval(() => { if(heroItems.length > 0){ currentIndex = (currentIndex + 1) % heroItems.length; goToSlide(currentIndex); } }, 8000); }
         function toggleSidebar() { 
-            document.getElementById('sidebar').classList.toggle('open'); 
-            document.getElementById('overlay').style.display = 
-                document.getElementById('sidebar').classList.contains('open') ? 'block' : 'none';
+            const side = document.getElementById('sidebar');
+            side.classList.toggle('open');
+            document.getElementById('overlay').style.display = side.classList.contains('open') ? 'block' : 'none';
+        }
+        function searchMovies() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
         }
 
-        // Run Init
-        init();
+        window.onload = init;
     </script>
 </body>
 </html>
