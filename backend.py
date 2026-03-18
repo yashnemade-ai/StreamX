@@ -1,57 +1,56 @@
-let shakaPlayer;
+from flask import Flask, request, Response
+import requests
+from urllib.parse import urljoin
 
-async function openPlayer(url) {
-    if (!url) return;
+app = Flask(__name__)
 
-    const video = document.getElementById('v-player');
-    document.getElementById('playerModal').style.display = 'flex';
+@app.route('/proxy')
+def proxy():
+    url = request.args.get('url')
+    if not url:
+        return "Missing URL", 400
 
-    // Reset video
-    video.pause();
-    video.removeAttribute('src');
-    video.load();
-
-    // Destroy previous Shaka instance
-    if (shakaPlayer) {
-        await shakaPlayer.destroy();
-        shakaPlayer = null;
+    headers = {
+        "User-Agent": "Mozilla/5.0",
+        "Referer": url
     }
 
-    try {
-        // 🔥 MPD (DASH) → Shaka
-        if (url.includes('.mpd')) {
-            shakaPlayer = new shaka.Player(video);
+    try:
+        r = requests.get(url, headers=headers, stream=True)
 
-            shakaPlayer.addEventListener('error', function (e) {
-                console.error("Shaka error:", e);
-            });
+        content_type = r.headers.get('Content-Type', '')
 
-            await shakaPlayer.load(url);
-            video.play();
+        # 🔥 If playlist (m3u8), fix relative paths
+        if 'application/vnd.apple.mpegurl' in content_type or '.m3u8' in url:
+            text = r.text
+            base = url
 
-        }
-        // 🔥 M3U8 → HLS.js
-        else if (url.includes('.m3u8')) {
-            if (Hls.isSupported()) {
-                const hls = new Hls();
-                hls.loadSource(url);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                    video.play();
-                });
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = url;
-                video.play();
-            }
-        }
-        // 🔥 MP4 direct
-        else {
-            video.src = url;
-            video.play();
-        }
+            new_lines = []
+            for line in text.split('\n'):
+                if line.startswith('#') or line.strip() == '':
+                    new_lines.append(line)
+                else:
+                    absolute = urljoin(base, line)
+                    proxied = '/proxy?url=' + absolute
+                    new_lines.append(proxied)
 
-    } catch (error) {
-        console.error("Playback failed:", error);
-        alert("Video play nahi ho rahi");
-    }
-}
+            return Response('\n'.join(new_lines),
+                            content_type='application/vnd.apple.mpegurl',
+                            headers={"Access-Control-Allow-Origin": "*"})
+
+        # 🔥 For video segments / mp4 / ts / mpd
+        def generate():
+            for chunk in r.iter_content(1024):
+                if chunk:
+                    yield chunk
+
+        return Response(generate(),
+                        content_type=content_type,
+                        headers={"Access-Control-Allow-Origin": "*"})
+
+    except Exception as e:
+        return str(e), 500
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
