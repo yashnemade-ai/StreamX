@@ -56,29 +56,20 @@
 
         /* --- ANIMATED SEARCH BAR --- */
         .search-box {
-            background: var(--bg); 
-            border: 1px solid var(--border);
-            padding: 8px 15px; border-radius: 50px; 
-            display: flex; align-items: center;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 200px;
+            background: var(--bg); border: 1px solid var(--border);
+            padding: 8px 15px; border-radius: 50px; display: flex; align-items: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); width: 200px;
         }
         .search-box:focus-within {
-            width: 300px;
-            border-color: var(--accent);
-            box-shadow: 0 0 15px var(--shadow);
+            width: 300px; border-color: var(--accent); box-shadow: 0 0 15px var(--shadow);
         }
         .search-box input { 
-            background: transparent; border: none; color: var(--text); 
-            outline: none; width: 100%; font-size: 14px; margin-left: 10px;
+            background: transparent; border: none; color: var(--text); outline: none; width: 100%; font-size: 14px; margin-left: 10px;
         }
         
-        .theme-btn { 
-            font-size: 20px; cursor: pointer; color: var(--text); 
-            background: none; border: none; transition: 0.3s;
-        }
+        .theme-btn { font-size: 20px; cursor: pointer; color: var(--text); background: none; border: none; transition: 0.3s; }
 
-        /* --- HERO SLIDER --- */
+        /* --- HERO SLIDER (TEXT RESTORED) --- */
         .slider-container {
             width: 100%; height: 75vh; margin-top: 68px; position: relative;
             overflow: hidden; background: #000;
@@ -92,10 +83,39 @@
         
         .slide-content {
             position: absolute; bottom: 0; left: 0; width: 100%;
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 10%, transparent 100%);
-            padding: 60px 6%; z-index: 10;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 20%, transparent 100%);
+            padding: 80px 6%; z-index: 10;
         }
-        .slide-content h1 { font-size: clamp(30px, 5vw, 55px); font-weight: 900; color: #fff; margin-bottom: 10px; }
+        .slide-content h1 { 
+            font-size: clamp(35px, 6vw, 65px); 
+            font-weight: 900; 
+            color: #ffffff !important; 
+            margin-bottom: 5px;
+            letter-spacing: -1.5px;
+        }
+        .slide-content p { 
+            font-size: 18px; 
+            color: #cccccc !important; 
+            margin-bottom: 30px; 
+            font-weight: 400;
+        }
+
+        .btn-watch-main {
+            background: var(--accent) !important;
+            color: #fff !important;
+            padding: 14px 35px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-transform: uppercase;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .btn-watch-main:hover { transform: scale(1.05); }
 
         .slider-dots {
             position: absolute; bottom: 25px; width: 100%;
@@ -127,11 +147,6 @@
             background: var(--accent); color: white; font-size: 9px; 
             font-weight: 900; padding: 2px 8px; border-radius: 4px; display: inline-block;
             margin-top: 8px; text-transform: uppercase;
-        }
-
-        .btn-watch-main {
-            background: var(--accent); color: #fff; padding: 12px 30px; border: none;
-            border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 10px;
         }
 
         /* SIDEBAR */
@@ -191,6 +206,8 @@
         @media (max-width: 768px) {
             .search-box { width: 140px; }
             .search-box:focus-within { width: 180px; }
+            .slider-container { height: 50vh; }
+            .slide-content { padding: 40px 6%; }
             .settings-container { bottom: 100px; right: 15px; }
         }
     </style>
@@ -219,7 +236,6 @@
         <div style="font-size:14px; color:var(--text-dim); line-height:2">
             <p style="color:var(--text); font-weight:800; font-size:16px; margin-bottom:10px">Yash's StreamX</p>
             <p>Premium Content Hub</p>
-            <!-- Email link clickable to redirect to mail app -->
             <p>Contact: <a href="mailto:support@streamx.com" style="color:var(--accent); text-decoration:none; font-weight:700;">support@streamx.com</a></p>
             <hr style="margin:20px 0; opacity:0.1">
             <p>© 2026 All Rights Reserved.</p>
@@ -239,7 +255,6 @@
         <div class="movie-grid" id="movieGrid" data-aos="fade-up"></div>
     </div>
 
-    <!-- PLAYER MODAL -->
     <div class="player-modal" id="playerModal">
         <div class="player-overlay" id="playerOverlay">
             <div class="player-logo-overlay">STREAM<span style="color:var(--accent)">X</span></div>
@@ -289,6 +304,7 @@
             } catch (e) { console.error("Load Error"); }
         }
 
+        // --- RESTORED SLIDER CONTENT ---
         function renderSlider() {
             const wrapper = document.getElementById('sliderWrapper');
             const dots = document.getElementById('sliderDots');
@@ -297,6 +313,7 @@
                     <img src="${m.logo}">
                     <div class="slide-content">
                         <h1>${m.name}</h1>
+                        <p>Platinum Exclusive • Trending</p>
                         <button class="btn-watch-main" onclick="openPlayer('${m.url}')">
                            <i class="fa fa-play"></i> WATCH NOW
                         </button>
@@ -304,6 +321,7 @@
                 </div>`).join('');
             dots.innerHTML = heroItems.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>`).join('');
         }
+
         function goToSlide(index) {
             currentIndex = index;
             const wrapper = document.getElementById('sliderWrapper');
@@ -311,9 +329,9 @@
             if(wrapper) wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
             dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
         }
+
         function startAutoSlide() { setInterval(() => { currentIndex = (currentIndex + 1) % heroItems.length; goToSlide(currentIndex); }, 7000); }
         
-        // --- RESTORED QUALITY TAG IN GRID ---
         function renderGrid(data) {
             const grid = document.getElementById('movieGrid');
             grid.innerHTML = data.map(m => `
@@ -349,7 +367,6 @@
         }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-        // --- PLAYER LOGIC ---
         const modal = document.getElementById('playerModal');
         const overlay = document.getElementById('playerOverlay');
         const video = document.getElementById('v-player');
