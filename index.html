@@ -24,7 +24,7 @@
             --text-dim: #b3b3b3;
             --accent: #E50914;
             --border: #1a1a1a;
-            --shadow: rgba(229, 9, 20, 0.2);
+            --shadow: rgba(229, 9, 20, 0.4);
         }
 
         [data-theme="light"] {
@@ -47,23 +47,35 @@
             padding: 12px 6%; background: var(--nav-bg);
             position: fixed; width: 100%; top: 0; z-index: 1000;
             border-bottom: 2px solid var(--border);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         .nav-left { display: flex; align-items: center; gap: 20px; }
         .logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; cursor: pointer; }
         .logo span.red { color: var(--accent); }
         
         .nav-right { display: flex; align-items: center; gap: 20px; }
+
+        /* --- ANIMATED SEARCH BAR --- */
         .search-box {
-            background: var(--bg); border: 2px solid var(--border);
-            padding: 8px 15px; border-radius: 10px; display: flex; align-items: center;
+            background: var(--bg); 
+            border: 1px solid var(--border);
+            padding: 8px 15px; border-radius: 50px; 
+            display: flex; align-items: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 200px;
         }
-        .search-box input { background: transparent; border: none; color: var(--text); outline: none; width: 180px; font-size: 14px; font-weight: 500; }
+        .search-box:focus-within {
+            width: 300px;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--shadow);
+        }
+        .search-box input { 
+            background: transparent; border: none; color: var(--text); 
+            outline: none; width: 100%; font-size: 14px; margin-left: 10px;
+        }
         
         .theme-btn { 
-            font-size: 22px; cursor: pointer; color: var(--text); 
-            background: none; border: none; display: flex; align-items: center;
-            transition: 0.3s;
+            font-size: 20px; cursor: pointer; color: var(--text); 
+            background: none; border: none; transition: 0.3s;
         }
 
         /* --- HERO SLIDER --- */
@@ -80,23 +92,10 @@
         
         .slide-content {
             position: absolute; bottom: 0; left: 0; width: 100%;
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, rgba(0,0,0,0.4) 50%, transparent 100%);
-            padding: 60px 6%; text-align: left; z-index: 10;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 10%, transparent 100%);
+            padding: 60px 6%; z-index: 10;
         }
-        .slide-content h1 { 
-            font-size: clamp(30px, 5vw, 55px); 
-            font-weight: 900; 
-            color: #ffffff !important; 
-            margin-bottom: 10px; 
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-        }
-
-        .slide-content p { 
-            font-size: 18px; 
-            color: #eeeeee !important; 
-            margin-bottom: 25px; 
-            opacity: 0.9;
-        }
+        .slide-content h1 { font-size: clamp(30px, 5vw, 55px); font-weight: 900; color: #fff; margin-bottom: 10px; }
 
         .slider-dots {
             position: absolute; bottom: 25px; width: 100%;
@@ -105,102 +104,93 @@
         .dot { width: 10px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; transition: 0.4s; }
         .dot.active { background: var(--accent); width: 25px; border-radius: 10px; }
 
-        /* --- FILTERS --- */
+        /* --- FILTERS & GRID --- */
         .filter-container { padding: 35px 6% 0; display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
         .filter-chip {
-            padding: 10px 28px; background: var(--card-bg); border: 2px solid var(--border);
-            border-radius: 8px; cursor: pointer; font-weight: 700; white-space: nowrap; transition: 0.3s;
+            padding: 10px 25px; background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 8px; cursor: pointer; font-weight: 600; white-space: nowrap; transition: 0.3s;
         }
         .filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-        /* --- CARDS --- */
         .container { padding: 30px 6% 100px; }
         .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 25px; }
-        
         .movie-card { 
             background: var(--card-bg); border-radius: 12px; overflow: hidden; 
-            border: 2px solid var(--border); transition: 0.4s; cursor: pointer;
-            position: relative;
+            border: 1px solid var(--border); transition: 0.4s; cursor: pointer;
         }
-        .movie-card:hover { transform: translateY(-12px); border-color: var(--accent); box-shadow: 0 10px 25px var(--shadow); }
+        .movie-card:hover { transform: translateY(-10px); border-color: var(--accent); box-shadow: 0 10px 20px var(--shadow); }
         .movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
-        
         .card-info { padding: 15px; }
-        .card-info h4 { font-size: 14px; font-weight: 800; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .card-genre { font-size: 11px; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .card-genre { font-size: 10px; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        
         .quality-tag { 
             background: var(--accent); color: white; font-size: 9px; 
             font-weight: 900; padding: 2px 8px; border-radius: 4px; display: inline-block;
+            margin-top: 8px; text-transform: uppercase;
         }
 
         .btn-watch-main {
-            background: var(--accent) !important;
-            color: #ffffff !important;
-            padding: 12px 35px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 800;
-            cursor: pointer;
-            font-size: 16px;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: 0.3s;
-            text-transform: uppercase;
+            background: var(--accent); color: #fff; padding: 12px 30px; border: none;
+            border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 10px;
         }
 
         /* SIDEBAR */
         .sidebar {
             position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
-            background: var(--nav-bg); z-index: 2000; border-right: 2px solid var(--border);
-            padding: 40px 30px; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--nav-bg); z-index: 2000; border-right: 1px solid var(--border);
+            padding: 40px 30px; transition: 0.5s;
         }
         .sidebar.open { left: 0; }
-        .sidebar-close { position: absolute; top: 25px; right: 25px; font-size: 28px; cursor: pointer; }
+        .sidebar-close { position: absolute; top: 25px; right: 25px; font-size: 24px; cursor: pointer; }
 
         /* --- PLAYER MODAL --- */
-        .player-modal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; overflow: hidden; }
-        .close-player { position: absolute; top: 20px; right: 25px; color: white; font-size: 40px; cursor: pointer; z-index: 3500; opacity: 0; transition: 0.3s; }
+        .player-modal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; }
         
-        /* Player UI Overlay */
         .player-overlay { 
             position: absolute; inset: 0; z-index: 3100; 
             pointer-events: none; opacity: 0; transition: 0.4s ease;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 20%, transparent 80%, rgba(0,0,0,0.6) 100%);
         }
-        .player-overlay.show { opacity: 1; pointer-events: all; }
-        .player-overlay.show ~ .close-player { opacity: 1; }
+        .player-overlay.show { opacity: 1; }
 
         .player-logo-overlay {
-            position: absolute; top: 25px; left: 25px; font-size: 24px; font-weight: 900; color: white;
+            position: absolute; top: 25px; left: 25px; font-size: 22px; font-weight: 900; color: white;
+            pointer-events: auto;
         }
 
-        /* Settings Menu */
+        .close-player { 
+            position: absolute; top: 20px; right: 25px; color: white; font-size: 35px; 
+            cursor: pointer; z-index: 3500; pointer-events: auto;
+        }
+
         .settings-container {
-            position: absolute; bottom: 80px; right: 25px; display: flex; flex-direction: column; align-items: flex-end;
+            position: absolute; bottom: 85px; right: 25px; 
+            display: flex; flex-direction: column; align-items: flex-end;
+            pointer-events: auto;
         }
         .settings-icon-btn {
-            width: 45px; height: 45px; background: rgba(0,0,0,0.6); border: 1.5px solid var(--border);
+            width: 45px; height: 45px; background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.2);
             border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center;
-            font-size: 20px; cursor: pointer; pointer-events: all;
+            font-size: 20px; cursor: pointer; transition: 0.3s;
         }
+        .settings-icon-btn:hover { background: var(--accent); }
+
         .settings-menu {
-            background: rgba(13, 13, 15, 0.95); border: 1px solid var(--border);
-            padding: 15px; border-radius: 12px; margin-bottom: 10px; width: 200px;
-            display: none; pointer-events: all; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: rgba(13, 13, 15, 0.98); border: 1px solid var(--border);
+            padding: 15px; border-radius: 12px; margin-bottom: 15px; width: 220px;
+            display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
         .settings-menu.open { display: block; }
         .menu-item { margin-bottom: 12px; }
-        .menu-item:last-child { margin-bottom: 0; }
-        .menu-item label { display: block; font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 800; margin-bottom: 5px; }
+        .menu-item label { display: block; font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 800; margin-bottom: 6px; }
         .menu-item select {
             width: 100%; background: #1a1a1a; color: white; border: 1px solid #333;
-            padding: 6px; border-radius: 5px; font-size: 13px; outline: none; cursor: pointer;
+            padding: 8px; border-radius: 6px; font-size: 13px; outline: none; cursor: pointer;
         }
 
         @media (max-width: 768px) {
-            .search-box { display: none; }
-            .slider-container { height: 50vh; }
-            .movie-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .search-box { width: 140px; }
+            .search-box:focus-within { width: 180px; }
             .settings-container { bottom: 100px; right: 15px; }
         }
     </style>
@@ -214,8 +204,8 @@
         </div>
         <div class="nav-right">
             <div class="search-box">
-                <i class="fa fa-search" style="opacity:0.5"></i>
-                <input type="text" id="searchInput" placeholder="Search..." oninput="searchMovies()">
+                <i class="fa fa-search" style="opacity:0.6; font-size:14px"></i>
+                <input type="text" id="searchInput" placeholder="Search movies..." oninput="searchMovies()">
             </div>
             <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">
                 <i class="fa-solid fa-moon"></i>
@@ -226,12 +216,13 @@
     <div class="sidebar" id="sidebar">
         <i class="fa fa-times sidebar-close" onclick="toggleSidebar()"></i>
         <div class="logo" style="margin-bottom:40px"><span class="red">STREAM</span><span class="white">X</span></div>
-        <div style="font-size:15px; color:var(--text-dim); line-height:1.8">
-            <p style="color:var(--text); font-weight:900; font-size:18px; margin-bottom:10px">ABOUT INFO</p>
-            <p>Developed by: <b>Yash</b></p>
-            <p>Support: <a href="mailto:support@streamx.com" style="color:var(--accent); text-decoration:none">support@streamx.com</a></p>
+        <div style="font-size:14px; color:var(--text-dim); line-height:2">
+            <p style="color:var(--text); font-weight:800; font-size:16px; margin-bottom:10px">Yash's StreamX</p>
+            <p>Premium Content Hub</p>
+            <!-- Email link clickable to redirect to mail app -->
+            <p>Contact: <a href="mailto:support@streamx.com" style="color:var(--accent); text-decoration:none; font-weight:700;">support@streamx.com</a></p>
             <hr style="margin:20px 0; opacity:0.1">
-            <p>© 2026 STREAMX. All rights reserved.</p>
+            <p>© 2026 All Rights Reserved.</p>
         </div>
     </div>
 
@@ -250,20 +241,18 @@
 
     <!-- PLAYER MODAL -->
     <div class="player-modal" id="playerModal">
-        <span class="close-player" onclick="closePlayer()">&times;</span>
-        
-        <!-- Custom UI Overlay -->
         <div class="player-overlay" id="playerOverlay">
             <div class="player-logo-overlay">STREAM<span style="color:var(--accent)">X</span></div>
+            <span class="close-player" onclick="closePlayer()">&times;</span>
             
             <div class="settings-container">
                 <div class="settings-menu" id="settingsMenu">
                     <div class="menu-item">
-                        <label>Audio Track</label>
+                        <label><i class="fa fa-globe"></i> Audio Track</label>
                         <select id="audioSel" onchange="changeAudio()"><option>Default</option></select>
                     </div>
                     <div class="menu-item">
-                        <label>Quality</label>
+                        <label><i class="fa fa-layer-group"></i> Video Quality</label>
                         <select id="qualitySel" onchange="changeQuality()"><option>Auto</option></select>
                     </div>
                 </div>
@@ -272,8 +261,7 @@
                 </div>
             </div>
         </div>
-
-        <video id="v-player" style="width:100%; height:100vh;" autoplay controls playsinline></video>
+        <video id="v-player" style="width:100%; height:100vh; cursor: pointer;" autoplay controls playsinline></video>
     </div>
 
     <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
@@ -301,7 +289,6 @@
             } catch (e) { console.error("Load Error"); }
         }
 
-        // ... slider & grid rendering functions (same as before) ...
         function renderSlider() {
             const wrapper = document.getElementById('sliderWrapper');
             const dots = document.getElementById('sliderDots');
@@ -310,9 +297,8 @@
                     <img src="${m.logo}">
                     <div class="slide-content">
                         <h1>${m.name}</h1>
-                        <p>Platinum Exclusive • Trending</p>
                         <button class="btn-watch-main" onclick="openPlayer('${m.url}')">
-                           <i class="fa fa-play"></i> &nbsp; Watch Now
+                           <i class="fa fa-play"></i> WATCH NOW
                         </button>
                     </div>
                 </div>`).join('');
@@ -326,6 +312,8 @@
             dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
         }
         function startAutoSlide() { setInterval(() => { currentIndex = (currentIndex + 1) % heroItems.length; goToSlide(currentIndex); }, 7000); }
+        
+        // --- RESTORED QUALITY TAG IN GRID ---
         function renderGrid(data) {
             const grid = document.getElementById('movieGrid');
             grid.innerHTML = data.map(m => `
@@ -333,11 +321,12 @@
                     <img src="${m.logo}" loading="lazy">
                     <div class="card-info">
                         <span class="card-genre">${m.cat || 'General'}</span>
-                        <h4>${m.name}</h4>
-                        <div class="quality-tag">${m.quality || 'HD'}</div>
+                        <h4 style="font-size:13px; font-weight:700">${m.name}</h4>
+                        <div class="quality-tag">${m.quality || 'Web-HQ'}</div>
                     </div>
                 </div>`).join('');
         }
+
         function renderFilters() {
             const wrapper = document.getElementById('filterWrapper');
             const cats = [...new Set(gridItems.map(m => m.cat))];
@@ -346,15 +335,12 @@
         function filterData(cat, el) {
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
-            const filtered = cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat);
-            renderGrid(filtered);
-            document.querySelector('.container').scrollIntoView({ behavior: 'smooth' });
+            renderGrid(cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat));
         }
         function toggleTheme() {
             const html = document.documentElement;
             const isDark = html.getAttribute('data-theme') === 'dark';
-            const newTheme = isDark ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
+            html.setAttribute('data-theme', isDark ? 'light' : 'dark');
             document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
         }
         function searchMovies() {
@@ -364,12 +350,10 @@
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
         // --- PLAYER LOGIC ---
-
         const modal = document.getElementById('playerModal');
         const overlay = document.getElementById('playerOverlay');
         const video = document.getElementById('v-player');
 
-        // Auto Hide Overlay with Controls
         function showUI() {
             overlay.classList.add('show');
             clearTimeout(uiTimer);
@@ -393,8 +377,7 @@
                 hlsInstance = new Hls();
                 hlsInstance.loadSource(url);
                 hlsInstance.attachMedia(video);
-                
-                hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
                     setupQuality();
                     setupAudio();
                     video.play();
@@ -426,10 +409,7 @@
 
         function changeQuality() { hlsInstance.currentLevel = parseInt(document.getElementById('qualitySel').value); }
         function changeAudio() { hlsInstance.audioTrack = parseInt(document.getElementById('audioSel').value); }
-
-        function toggleSettingsMenu() {
-            document.getElementById('settingsMenu').classList.toggle('open');
-        }
+        function toggleSettingsMenu() { document.getElementById('settingsMenu').classList.toggle('open'); }
 
         function closePlayer() {
             video.pause();
