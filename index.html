@@ -57,61 +57,51 @@
 
         .theme-btn { background: none; border: none; color: var(--text); font-size: 20px; cursor: pointer; }
 
-        /* --- SOLID BLACK SIDEBAR --- */
+        /* --- ADAPTIVE SIDEBAR --- */
         .sidebar {
             position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
             background: var(--nav-bg) !important; 
             z-index: 2000; border-right: 1px solid var(--border);
             padding: 40px 30px; transition: 0.5s;
+            color: var(--text);
         }
         .sidebar.open { left: 0; }
-        .sidebar-close { position: absolute; top: 25px; right: 25px; font-size: 24px; cursor: pointer; color: #fff; }
-        
-        /* RESTORED: Support link light bold (600) */
+        .sidebar-close { position: absolute; top: 25px; right: 25px; font-size: 24px; cursor: pointer; color: var(--text); }
         .sidebar-contact { color: var(--accent) !important; font-weight: 600 !important; text-decoration: none; font-size: 16px; }
+
+        .cors-note {
+            background: rgba(229, 9, 20, 0.1);
+            border-left: 3px solid var(--accent);
+            padding: 12px; margin-top: 20px; font-size: 13px;
+            border-radius: 4px; color: var(--text); line-height: 1.5;
+        }
 
         /* --- BANNER --- */
         .slider-container { width: 100%; height: 75vh; position: relative; overflow: hidden; background: #000; margin-top: 55px; touch-action: pan-y; }
         .slider-wrapper { display: flex; height: 100%; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
         .slide { min-width: 100%; height: 100%; position: relative; overflow: hidden; }
-        
-        .slide img { 
-            width: 100%; height: 100%; 
-            object-fit: 100% 100%; 
-            transition: transform 10s linear;
-        } 
+        .slide img { width: 100%; height: 100%; object-fit: 100% 100%; transition: transform 10s linear; } 
         .slide.active img { transform: scale(1.05); } 
-        
-        .slide-overlay { 
-            position: absolute; inset: 0; 
-            background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 45%);
-        }
-
+        .slide-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 45%); }
         .slide-content { position: absolute; bottom: 12%; left: 6%; z-index: 10; max-width: 450px; }
         .badge { background: var(--accent); color: white; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; display: inline-block; }
         .slide-content h1 { font-size: clamp(24px, 4vw, 38px); font-weight: 900; line-height: 1.2; margin-bottom: 10px; color: #fff; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
         .slide-content p { color: #eee; font-size: 14px; margin-bottom: 20px; text-shadow: 1px 1px 5px rgba(0,0,0,0.8); }
-        .btn-watch-main { background: var(--accent); color: #fff; padding: 10px 25px; border: none; border-radius: 6px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; transition: 0.3s; }
-        .btn-watch-main:hover { opacity: 0.9; transform: scale(1.05); }
+        .btn-watch-main { background: var(--accent); color: #fff; padding: 10px 25px; border: none; border-radius: 6px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; }
 
         .slider-dots { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 20; }
         .dot { width: 10px; height: 10px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; transition: 0.3s; }
         .dot.active { background: var(--accent); width: 25px; border-radius: 10px; }
 
-        /* --- CARDS (RESTORED ANIMATION) --- */
+        /* --- CARDS --- */
         .filter-container { padding: 30px 6% 0; display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
         .filter-chip { padding: 10px 22px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 50px; cursor: pointer; font-weight: 600; white-space: nowrap; color: var(--text); transition: 0.3s; }
         .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
         .container { padding: 20px 6% 100px; }
         .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
-        
-        .movie-card { 
-            background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; 
-        }
+        .movie-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
         .movie-card:hover { transform: translateY(-12px); border-color: var(--accent); box-shadow: 0 15px 35px var(--shadow); }
-        
         .movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
         .card-info { padding: 12px; }
         .card-genre { font-size: 10px; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; display: block; }
@@ -152,28 +142,23 @@
         </div>
     </nav>
 
-    <!-- ADAPTIVE SIDEBAR -->
-<div class="sidebar" id="sidebar">
-    <i class="fa fa-times sidebar-close" onclick="toggleSidebar()"></i>
-    <div class="logo" style="margin-bottom:40px; color: var(--text);"><span class="red">STREAM</span><span>X</span></div>
-    
-    <div style="font-size:14px; color: var(--text-dim); line-height:1.8">
-        <p style="color: var(--text); font-weight:800; font-size:18px; margin-bottom:12px; text-transform: uppercase;">About</p>
-        <p>StreamX is a premium cinematic destination designed for high-quality content enthusiasts.</p>
-        
-        <!-- CORS EXTENSION NOTE -->
-        <div class="cors-note">
-            <b style="color: var(--accent); display: block; margin-bottom: 5px;">IMPORTANT NOTE:</b>
-            To access and play our content, please install and enable the <span style="color: var(--accent); font-weight: 700;">'Allow CORS'</span> extension in your browser.
+    <div class="sidebar" id="sidebar">
+        <i class="fa fa-times sidebar-close" onclick="toggleSidebar()"></i>
+        <div class="logo" style="margin-bottom:40px; color: var(--text);"><span class="red">STREAM</span><span>X</span></div>
+        <div style="font-size:14px; color: var(--text-dim); line-height:1.8">
+            <p style="color: var(--text); font-weight:800; font-size:18px; margin-bottom:12px; text-transform: uppercase;">About</p>
+            <p>StreamX is a premium cinematic destination designed for high-quality content enthusiasts.</p>
+            <div class="cors-note">
+                <b style="color: var(--accent); display: block; margin-bottom: 5px;">IMPORTANT NOTE:</b>
+                To access and play our content, please install and enable the <span style="color: var(--accent); font-weight: 700;">'Allow CORS'</span> extension in your browser.
+            </div>
+            <br>
+            <p>Developed by: <b>Yash</b></p>
+            <p>Official Support: <a href="mailto:support@streamx.com" class="sidebar-contact">support@streamx.com</a></p>
+            <hr style="margin:25px 0; opacity:0.1; border-color: var(--text);">
+            <p style="font-size:12px; opacity:0.6">© 2026 STREAMX. All Rights Reserved.</p>
         </div>
-
-        <br>
-        <p>Developed by: <b>Yash</b></p>
-        <p>Official Support: <a href="mailto:support@streamx.com" class="sidebar-contact" style="font-weight: 600 !important;">support@streamx.com</a></p>
-        <hr style="margin:25px 0; opacity:0.1; border-color: var(--text);">
-        <p style="font-size:12px; opacity:0.6">© 2026 STREAMX. All Rights Reserved.</p>
     </div>
-</div>
 
     <section class="slider-container" id="sliderContainer">
         <div class="slider-wrapper" id="sliderWrapper"></div>
@@ -209,19 +194,39 @@
         let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
         let hls = null;
         let slideInterval;
+        const JSON_URL = "https://api.npoint.io/56fc751c2191cd12b672";
+
+        async function fetchData() {
+            try {
+                // Cache busting URL adding timestamp
+                const res = await fetch(`${JSON_URL}?t=${new Date().getTime()}`);
+                const data = await res.json();
+                
+                // Compare length to see if something changed
+                if (JSON.stringify(data) !== JSON.stringify(allMovies)) {
+                    allMovies = data;
+                    heroItems = allMovies.filter(m => !m.cat || m.cat.trim() === "");
+                    gridItems = allMovies.filter(m => m.cat && m.cat.trim() !== "");
+                    
+                    // Initial load or update grid
+                    if(document.getElementById('movieGrid').innerHTML === "") {
+                        renderSlider();
+                        renderFilters();
+                        renderGrid(gridItems);
+                        startAutoSlide();
+                    } else {
+                        // Only update grid to avoid breaking slider/search experience
+                        renderGrid(gridItems);
+                    }
+                }
+            } catch (e) { console.error("Realtime Sync Error"); }
+        }
 
         async function init() {
-            try {
-                const res = await fetch("https://api.npoint.io/56fc751c2191cd12b672");
-                allMovies = await res.json();
-                heroItems = allMovies.filter(m => !m.cat || m.cat.trim() === "");
-                gridItems = allMovies.filter(m => m.cat && m.cat.trim() !== "");
-                renderSlider();
-                renderFilters();
-                renderGrid(gridItems);
-                startAutoSlide();
-                initSwipe(); // Initialize Touch Swipe
-            } catch (e) { console.error("API Error"); }
+            await fetchData();
+            initSwipe();
+            // Start Polling: Check for updates every 30 seconds
+            setInterval(fetchData, 30000); 
         }
 
         function renderSlider() {
@@ -265,33 +270,15 @@
             }, 6000);
         }
 
-        // --- SWIPE FUNCTIONALITY ---
         function initSwipe() {
             const slider = document.getElementById('sliderContainer');
-            let touchStartX = 0;
-            let touchEndX = 0;
-
-            slider.addEventListener('touchstart', e => {
-                touchStartX = e.changedTouches[0].screenX;
-            }, {passive: true});
-
+            let touchStartX = 0, touchEndX = 0;
+            slider.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
             slider.addEventListener('touchend', e => {
                 touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
+                if (touchStartX - touchEndX > 50) manualSlide((currentIndex + 1) % heroItems.length);
+                else if (touchEndX - touchStartX > 50) manualSlide((currentIndex - 1 + heroItems.length) % heroItems.length);
             }, {passive: true});
-
-            function handleSwipe() {
-                const threshold = 50;
-                if (touchStartX - touchEndX > threshold) {
-                    // Swipe Left -> Next Slide
-                    let next = (currentIndex + 1) % heroItems.length;
-                    manualSlide(next);
-                } else if (touchEndX - touchStartX > threshold) {
-                    // Swipe Right -> Prev Slide
-                    let prev = (currentIndex - 1 + heroItems.length) % heroItems.length;
-                    manualSlide(prev);
-                }
-            }
         }
 
         function renderGrid(data) {
