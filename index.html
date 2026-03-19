@@ -102,7 +102,7 @@
             position: absolute; bottom: 25px; width: 100%;
             display: flex; justify-content: center; gap: 10px; z-index: 20;
         }
-        .dot { width: 100%; max-width: 10px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; transition: 0.4s; }
+        .dot { width: 10px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; transition: 0.4s; }
         .dot.active { background: var(--accent); width: 25px; border-radius: 10px; }
 
         /* --- FILTERS --- */
@@ -158,14 +158,50 @@
         .sidebar.open { left: 0; }
         .sidebar-close { position: absolute; top: 25px; right: 25px; font-size: 28px; cursor: pointer; }
 
-        /* PLAYER MODAL */
-        .player-modal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; }
-        .close-player { position: absolute; top: 20px; right: 25px; color: white; font-size: 40px; cursor: pointer; z-index: 3100; }
+        /* --- PLAYER MODAL --- */
+        .player-modal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; overflow: hidden; }
+        .close-player { position: absolute; top: 20px; right: 25px; color: white; font-size: 40px; cursor: pointer; z-index: 3500; opacity: 0; transition: 0.3s; }
+        
+        /* Player UI Overlay */
+        .player-overlay { 
+            position: absolute; inset: 0; z-index: 3100; 
+            pointer-events: none; opacity: 0; transition: 0.4s ease;
+        }
+        .player-overlay.show { opacity: 1; pointer-events: all; }
+        .player-overlay.show ~ .close-player { opacity: 1; }
+
+        .player-logo-overlay {
+            position: absolute; top: 25px; left: 25px; font-size: 24px; font-weight: 900; color: white;
+        }
+
+        /* Settings Menu */
+        .settings-container {
+            position: absolute; bottom: 80px; right: 25px; display: flex; flex-direction: column; align-items: flex-end;
+        }
+        .settings-icon-btn {
+            width: 45px; height: 45px; background: rgba(0,0,0,0.6); border: 1.5px solid var(--border);
+            border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer; pointer-events: all;
+        }
+        .settings-menu {
+            background: rgba(13, 13, 15, 0.95); border: 1px solid var(--border);
+            padding: 15px; border-radius: 12px; margin-bottom: 10px; width: 200px;
+            display: none; pointer-events: all; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .settings-menu.open { display: block; }
+        .menu-item { margin-bottom: 12px; }
+        .menu-item:last-child { margin-bottom: 0; }
+        .menu-item label { display: block; font-size: 11px; color: var(--text-dim); text-transform: uppercase; font-weight: 800; margin-bottom: 5px; }
+        .menu-item select {
+            width: 100%; background: #1a1a1a; color: white; border: 1px solid #333;
+            padding: 6px; border-radius: 5px; font-size: 13px; outline: none; cursor: pointer;
+        }
 
         @media (max-width: 768px) {
             .search-box { display: none; }
             .slider-container { height: 50vh; }
             .movie-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .settings-container { bottom: 100px; right: 15px; }
         }
     </style>
 </head>
@@ -212,8 +248,31 @@
         <div class="movie-grid" id="movieGrid" data-aos="fade-up"></div>
     </div>
 
+    <!-- PLAYER MODAL -->
     <div class="player-modal" id="playerModal">
         <span class="close-player" onclick="closePlayer()">&times;</span>
+        
+        <!-- Custom UI Overlay -->
+        <div class="player-overlay" id="playerOverlay">
+            <div class="player-logo-overlay">STREAM<span style="color:var(--accent)">X</span></div>
+            
+            <div class="settings-container">
+                <div class="settings-menu" id="settingsMenu">
+                    <div class="menu-item">
+                        <label>Audio Track</label>
+                        <select id="audioSel" onchange="changeAudio()"><option>Default</option></select>
+                    </div>
+                    <div class="menu-item">
+                        <label>Quality</label>
+                        <select id="qualitySel" onchange="changeQuality()"><option>Auto</option></select>
+                    </div>
+                </div>
+                <div class="settings-icon-btn" onclick="toggleSettingsMenu()">
+                    <i class="fa fa-cog"></i>
+                </div>
+            </div>
+        </div>
+
         <video id="v-player" style="width:100%; height:100vh;" autoplay controls playsinline></video>
     </div>
 
@@ -222,7 +281,8 @@
         AOS.init({ duration: 800 });
 
         let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
-        let hlsInstance = null; // Universal HLS Instance
+        let hlsInstance = null;
+        let uiTimer;
 
         async function init() {
             try {
@@ -241,6 +301,7 @@
             } catch (e) { console.error("Load Error"); }
         }
 
+        // ... slider & grid rendering functions (same as before) ...
         function renderSlider() {
             const wrapper = document.getElementById('sliderWrapper');
             const dots = document.getElementById('sliderDots');
@@ -257,7 +318,6 @@
                 </div>`).join('');
             dots.innerHTML = heroItems.map((_, i) => `<div class="dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>`).join('');
         }
-
         function goToSlide(index) {
             currentIndex = index;
             const wrapper = document.getElementById('sliderWrapper');
@@ -265,9 +325,7 @@
             if(wrapper) wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
             dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
         }
-
         function startAutoSlide() { setInterval(() => { currentIndex = (currentIndex + 1) % heroItems.length; goToSlide(currentIndex); }, 7000); }
-
         function renderGrid(data) {
             const grid = document.getElementById('movieGrid');
             grid.innerHTML = data.map(m => `
@@ -280,13 +338,11 @@
                     </div>
                 </div>`).join('');
         }
-
         function renderFilters() {
             const wrapper = document.getElementById('filterWrapper');
             const cats = [...new Set(gridItems.map(m => m.cat))];
             cats.forEach(c => wrapper.innerHTML += `<div class="filter-chip" onclick="filterData('${c}', this)">${c}</div>`);
         }
-
         function filterData(cat, el) {
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
@@ -294,7 +350,6 @@
             renderGrid(filtered);
             document.querySelector('.container').scrollIntoView({ behavior: 'smooth' });
         }
-
         function toggleTheme() {
             const html = document.documentElement;
             const isDark = html.getAttribute('data-theme') === 'dark';
@@ -302,53 +357,87 @@
             html.setAttribute('data-theme', newTheme);
             document.getElementById('themeBtn').innerHTML = isDark ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
         }
-
         function searchMovies() {
             const term = document.getElementById('searchInput').value.toLowerCase();
             renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
         }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-        // ✅ UNIVERSAL PLAYER LOGIC (Hls.js + Native HTML5)
+        // --- PLAYER LOGIC ---
+
+        const modal = document.getElementById('playerModal');
+        const overlay = document.getElementById('playerOverlay');
+        const video = document.getElementById('v-player');
+
+        // Auto Hide Overlay with Controls
+        function showUI() {
+            overlay.classList.add('show');
+            clearTimeout(uiTimer);
+            uiTimer = setTimeout(() => {
+                if(!document.getElementById('settingsMenu').classList.contains('open')) {
+                    overlay.classList.remove('show');
+                }
+            }, 3000);
+        }
+
+        modal.addEventListener('mousemove', showUI);
+        modal.addEventListener('touchstart', showUI);
+
         function openPlayer(url) {
             if(!url) return;
-            const video = document.getElementById('v-player');
-            document.getElementById('playerModal').style.display = 'block';
+            modal.style.display = 'block';
+            showUI();
 
-            if (url.includes('.m3u8')) {
-                // Agar HLS link hai
-                if (Hls.isSupported()) {
-                    if (hlsInstance) hlsInstance.destroy();
-                    hlsInstance = new Hls();
-                    hlsInstance.loadSource(url);
-                    hlsInstance.attachMedia(video);
-                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
-                        video.play();
-                    });
-                } 
-                else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    // Safari/iOS native support
-                    video.src = url;
+            if (Hls.isSupported() && url.includes('.m3u8')) {
+                if (hlsInstance) hlsInstance.destroy();
+                hlsInstance = new Hls();
+                hlsInstance.loadSource(url);
+                hlsInstance.attachMedia(video);
+                
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+                    setupQuality();
+                    setupAudio();
                     video.play();
-                }
+                });
             } else {
-                // Agar MP4 ya direct link hai
                 video.src = url;
                 video.play();
+                document.querySelector('.settings-container').style.display = 'none';
             }
+        }
+
+        function setupQuality() {
+            const sel = document.getElementById('qualitySel');
+            sel.innerHTML = `<option value="-1">Auto Quality</option>`;
+            hlsInstance.levels.forEach((level, index) => {
+                sel.innerHTML += `<option value="${index}">${level.height}p</option>`;
+            });
+        }
+
+        function setupAudio() {
+            const sel = document.getElementById('audioSel');
+            sel.innerHTML = '';
+            if(hlsInstance.audioTracks.length > 1) {
+                hlsInstance.audioTracks.forEach((track, index) => {
+                    sel.innerHTML += `<option value="${index}">${track.name || track.lang}</option>`;
+                });
+            } else { sel.innerHTML = '<option>Original Audio</option>'; }
+        }
+
+        function changeQuality() { hlsInstance.currentLevel = parseInt(document.getElementById('qualitySel').value); }
+        function changeAudio() { hlsInstance.audioTrack = parseInt(document.getElementById('audioSel').value); }
+
+        function toggleSettingsMenu() {
+            document.getElementById('settingsMenu').classList.toggle('open');
         }
 
         function closePlayer() {
-            const video = document.getElementById('v-player');
             video.pause();
-            if (hlsInstance) {
-                hlsInstance.destroy();
-                hlsInstance = null;
-            }
+            if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
             video.src = "";
-            document.getElementById('playerModal').style.display = 'none';
+            document.getElementById('settingsMenu').classList.remove('open');
+            modal.style.display = 'none';
         }
-
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
         init();
     </script>
