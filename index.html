@@ -12,8 +12,8 @@
     <!-- AOS for Scroll Animations -->
     <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 
-    <!-- Shaka Player CSS & JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+    <!-- Universal HLS Player (No Backend Required) -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <style>
         :root {
@@ -102,7 +102,7 @@
             position: absolute; bottom: 25px; width: 100%;
             display: flex; justify-content: center; gap: 10px; z-index: 20;
         }
-        .dot { width: 10px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; transition: 0.4s; }
+        .dot { width: 100%; max-width: 10px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; transition: 0.4s; }
         .dot.active { background: var(--accent); width: 25px; border-radius: 10px; }
 
         /* --- FILTERS --- */
@@ -214,7 +214,7 @@
 
     <div class="player-modal" id="playerModal">
         <span class="close-player" onclick="closePlayer()">&times;</span>
-        <video id="v-player" style="width:100%; height:100vh;" autoplay controls></video>
+        <video id="v-player" style="width:100%; height:100vh;" autoplay controls playsinline></video>
     </div>
 
     <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
@@ -222,27 +222,10 @@
         AOS.init({ duration: 800 });
 
         let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
-        let playerInstance;
-
-        // Initialize Shaka Player
-        async function initPlayer() {
-            shaka.polyfill.installAll();
-            if (shaka.Player.isBrowserSupported()) {
-                const video = document.getElementById('v-player');
-                playerInstance = new shaka.Player(video);
-                
-                // Error handling
-                playerInstance.addEventListener('error', (event) => {
-                    console.error('Error code', event.detail.code, 'object', event.detail);
-                });
-            } else {
-                console.error('Browser not supported!');
-            }
-        }
+        let hlsInstance = null; // Universal HLS Instance
 
         async function init() {
             try {
-                await initPlayer();
                 const res = await fetch("https://api.npoint.io/56fc751c2191cd12b672");
                 allMovies = await res.json();
                 heroItems = allMovies.filter(m => !m.cat || m.cat.trim() === "");
@@ -325,22 +308,43 @@
             renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
         }
 
-        // ✅ SHAKA PLAYER OPEN LOGIC
-        async function openPlayer(url) {
+        // ✅ UNIVERSAL PLAYER LOGIC (Hls.js + Native HTML5)
+        function openPlayer(url) {
             if(!url) return;
+            const video = document.getElementById('v-player');
             document.getElementById('playerModal').style.display = 'block';
-            try {
-                await playerInstance.load(url);
-                console.log('The video has now been loaded!');
-            } catch (e) {
-                console.error('Error loading link into Shaka Player', e);
+
+            if (url.includes('.m3u8')) {
+                // Agar HLS link hai
+                if (Hls.isSupported()) {
+                    if (hlsInstance) hlsInstance.destroy();
+                    hlsInstance = new Hls();
+                    hlsInstance.loadSource(url);
+                    hlsInstance.attachMedia(video);
+                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+                        video.play();
+                    });
+                } 
+                else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Safari/iOS native support
+                    video.src = url;
+                    video.play();
+                }
+            } else {
+                // Agar MP4 ya direct link hai
+                video.src = url;
+                video.play();
             }
         }
 
-        async function closePlayer() {
+        function closePlayer() {
             const video = document.getElementById('v-player');
             video.pause();
-            await playerInstance.unload(); // Memory clear
+            if (hlsInstance) {
+                hlsInstance.destroy();
+                hlsInstance = null;
+            }
+            video.src = "";
             document.getElementById('playerModal').style.display = 'none';
         }
 
