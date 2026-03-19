@@ -152,20 +152,28 @@
         </div>
     </nav>
 
-    <div class="sidebar" id="sidebar">
-        <i class="fa fa-times sidebar-close" onclick="toggleSidebar()"></i>
-        <div class="logo" style="margin-bottom:40px"><span class="red">STREAM</span><span>X</span></div>
-        <div style="font-size:14px; color:#bbb; line-height:1.8">
-            <p style="color:#fff; font-weight:800; font-size:18px; margin-bottom:12px; text-transform: uppercase;">About</p>
-            <p>StreamX provides a seamless, buffer-free viewing experience.</p>
-            <br>
-            <p>Developed by: <b>Yash</b></p>
-            <p>Note: <b>For Access our content you guys needed to apply extension Allow Cores named.</b></p>
-            <p>Official Support: <a href="mailto:support@streamx.com" class="sidebar-contact">support@streamx.com</a></p>
-            <hr style="margin:25px 0; opacity:0.1; border-color:#fff">
-            <p style="font-size:12px; opacity:0.6">© 2026 STREAMX Media Group. All Rights Reserved.</p>
+    <!-- ADAPTIVE SIDEBAR -->
+<div class="sidebar" id="sidebar">
+    <i class="fa fa-times sidebar-close" onclick="toggleSidebar()"></i>
+    <div class="logo" style="margin-bottom:40px; color: var(--text);"><span class="red">STREAM</span><span>X</span></div>
+    
+    <div style="font-size:14px; color: var(--text-dim); line-height:1.8">
+        <p style="color: var(--text); font-weight:800; font-size:18px; margin-bottom:12px; text-transform: uppercase;">About</p>
+        <p>StreamX is a premium cinematic destination designed for high-quality content enthusiasts.</p>
+        
+        <!-- CORS EXTENSION NOTE -->
+        <div class="cors-note">
+            <b style="color: var(--accent); display: block; margin-bottom: 5px;">IMPORTANT NOTE:</b>
+            To access and play our content, please install and enable the <span style="color: var(--accent); font-weight: 700;">'Allow CORS'</span> extension in your browser.
         </div>
+
+        <br>
+        <p>Developed by: <b>Yash</b></p>
+        <p>Official Support: <a href="mailto:support@streamx.com" class="sidebar-contact" style="font-weight: 600 !important;">support@streamx.com</a></p>
+        <hr style="margin:25px 0; opacity:0.1; border-color: var(--text);">
+        <p style="font-size:12px; opacity:0.6">© 2026 STREAMX. All Rights Reserved.</p>
     </div>
+</div>
 
     <section class="slider-container" id="sliderContainer">
         <div class="slider-wrapper" id="sliderWrapper"></div>
