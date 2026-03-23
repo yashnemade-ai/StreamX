@@ -319,10 +319,27 @@
             cats.forEach(c => wrapper.innerHTML += `<div class="filter-chip" onclick="filterData('${c}', this)">${c}</div>`);
         }
         
+        // --- UPDATED: FILTER DATA WITH AUTO SCROLL ---
         function filterData(cat, el) {
+            // Manage active states
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
+
+            // Render filtered grid
             renderGrid(cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat));
+
+            // Smooth scroll to Main Container
+            const container = document.getElementById('mainContainer');
+            if(container) {
+                // Offset calculation (80px is approximately the navbar height)
+                const navbarHeight = 80;
+                const targetPosition = container.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+                
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            }
         }
 
         const modal = document.getElementById('playerModal');
