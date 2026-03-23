@@ -12,34 +12,19 @@
 
     <style>
         /* --- HIDE SCROLLBARS GLOBALLY --- */
-        *::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
-        }
-        * {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
+        *::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
 
         :root {
-            --bg: #050505;
-            --nav-bg: #000000;
-            --card-bg: #0d0d0f;
-            --text: #ffffff;
-            --text-dim: #b3b3b3;
-            --accent: #E50914;
-            --border: #1a1a1a;
-            --shadow: rgba(229, 9, 20, 0.4);
+            --bg: #050505; --nav-bg: #000000; --card-bg: #0d0d0f;
+            --text: #ffffff; --text-dim: #b3b3b3; --accent: #E50914;
+            --border: #1a1a1a; --shadow: rgba(229, 9, 20, 0.4);
         }
 
         [data-theme="light"] {
-            --bg: #f5f5f7;
-            --nav-bg: #ffffff;
-            --card-bg: #ffffff;
-            --text: #1d1d1f;
-            --text-dim: #6e6e73;
-            --accent: #E50914;
-            --border: #d2d2d7;
-            --shadow: rgba(0, 0, 0, 0.1);
+            --bg: #f5f5f7; --nav-bg: #ffffff; --card-bg: #ffffff;
+            --text: #1d1d1f; --text-dim: #6e6e73; --accent: #E50914;
+            --border: #d2d2d7; --shadow: rgba(0, 0, 0, 0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
@@ -66,23 +51,19 @@
 
         .theme-btn { background: none; border: none; color: var(--text); font-size: 20px; cursor: pointer; }
 
-        /* --- ADAPTIVE SIDEBAR --- */
+        /* --- SIDEBAR --- */
         .sidebar {
             position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
-            background: var(--nav-bg) !important; 
-            z-index: 2000; border-right: 1px solid var(--border);
-            padding: 40px 30px; transition: 0.5s;
-            color: var(--text);
+            background: var(--nav-bg) !important; z-index: 2000; border-right: 1px solid var(--border);
+            padding: 40px 30px; transition: 0.5s; color: var(--text);
         }
         .sidebar.open { left: 0; }
         .sidebar-close { position: absolute; top: 25px; right: 25px; font-size: 24px; cursor: pointer; color: var(--text); }
         .sidebar-contact { color: var(--accent) !important; font-weight: 600 !important; text-decoration: none; font-size: 16px; }
 
         .cors-note {
-            background: rgba(229, 9, 20, 0.1);
-            border-left: 3px solid var(--accent);
-            padding: 12px; margin-top: 20px; font-size: 13px;
-            border-radius: 4px; color: var(--text); line-height: 1.5;
+            background: rgba(229, 9, 20, 0.1); border-left: 3px solid var(--accent);
+            padding: 12px; margin-top: 20px; font-size: 13px; border-radius: 4px; line-height: 1.5;
         }
 
         /* --- BANNER --- */
@@ -189,8 +170,18 @@
         </div>
         <div class="player-settings-group">
             <div class="settings-panel" id="settingsPanel">
-                <div class="setting-row"><label style="font-size:10px; color:#aaa;">AUDIO</label><select id="audioSel" onchange="changeAudio()"></select></div>
-                <div class="setting-row"><label style="font-size:10px; color:#aaa;">QUALITY</label><select id="qualitySel" onchange="changeQuality()"></select></div>
+                <div class="setting-row">
+                    <label style="font-size:10px; color:#aaa;">AUDIO</label>
+                    <select id="audioSel" onchange="changeAudio()">
+                        <option>Default</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label style="font-size:10px; color:#aaa;">QUALITY</label>
+                    <select id="qualitySel" onchange="changeQuality()">
+                        <option>Auto Quality</option>
+                    </select>
+                </div>
             </div>
             <div class="settings-btn" onclick="toggleSettings()"><i class="fa fa-cog"></i></div>
         </div>
@@ -209,29 +200,18 @@
             try {
                 const res = await fetch(`${JSON_URL}?t=${new Date().getTime()}`);
                 const data = await res.json();
-                
                 if (JSON.stringify(data) !== JSON.stringify(allMovies)) {
                     allMovies = data;
                     heroItems = allMovies.filter(m => !m.cat || m.cat.trim() === "");
                     gridItems = allMovies.filter(m => m.cat && m.cat.trim() !== "");
-                    
                     if(document.getElementById('movieGrid').innerHTML === "") {
-                        renderSlider();
-                        renderFilters();
-                        renderGrid(gridItems);
-                        startAutoSlide();
-                    } else {
-                        renderGrid(gridItems);
-                    }
+                        renderSlider(); renderFilters(); renderGrid(gridItems); startAutoSlide();
+                    } else { renderGrid(gridItems); }
                 }
             } catch (e) { console.error("Realtime Sync Error"); }
         }
 
-        async function init() {
-            await fetchData();
-            initSwipe();
-            setInterval(fetchData, 30000); 
-        }
+        async function init() { await fetchData(); initSwipe(); setInterval(fetchData, 30000); }
 
         function renderSlider() {
             const wrapper = document.getElementById('sliderWrapper');
@@ -252,11 +232,7 @@
             dots.innerHTML = heroItems.map((_, i) => `<div class="dot ${i===0?'active':''}" onclick="manualSlide(${i})"></div>`).join('');
         }
 
-        function manualSlide(index) {
-            clearInterval(slideInterval);
-            goToSlide(index);
-            startAutoSlide();
-        }
+        function manualSlide(index) { clearInterval(slideInterval); goToSlide(index); startAutoSlide(); }
 
         function goToSlide(index) {
             currentIndex = index;
@@ -268,12 +244,7 @@
             slides.forEach((s, i) => s.classList.toggle('active', i === currentIndex));
         }
 
-        function startAutoSlide() {
-            slideInterval = setInterval(() => {
-                currentIndex = (currentIndex + 1) % heroItems.length;
-                goToSlide(currentIndex);
-            }, 6000);
-        }
+        function startAutoSlide() { slideInterval = setInterval(() => { currentIndex = (currentIndex + 1) % heroItems.length; goToSlide(currentIndex); }, 6000); }
 
         function initSwipe() {
             const slider = document.getElementById('sliderContainer');
@@ -319,69 +290,93 @@
             cats.forEach(c => wrapper.innerHTML += `<div class="filter-chip" onclick="filterData('${c}', this)">${c}</div>`);
         }
         
-        // --- UPDATED: FILTER DATA WITH AUTO SCROLL ---
         function filterData(cat, el) {
-            // Manage active states
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
-
-            // Render filtered grid
             renderGrid(cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat));
-
-            // Smooth scroll to Main Container
             const container = document.getElementById('mainContainer');
             if(container) {
-                // Offset calculation (80px is approximately the navbar height)
                 const navbarHeight = 80;
                 const targetPosition = container.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
-                
-                window.scrollTo({
-                    top: targetPosition,
-                    behavior: 'smooth'
-                });
+                window.scrollTo({ top: targetPosition, behavior: 'smooth' });
             }
         }
 
         const modal = document.getElementById('playerModal');
         const video = document.getElementById('v-player');
 
+        // --- PLAYER LOGIC ---
         function openPlayer(url) {
             if (!url) return;
             modal.style.display = 'block';
-            if (Hls.isSupported()) {
+
+            // Reset Dropdowns
+            const qSel = document.getElementById('qualitySel');
+            const aSel = document.getElementById('audioSel');
+            qSel.innerHTML = '<option>Auto Quality</option>';
+            aSel.innerHTML = '<option>Default Audio</option>';
+
+            const isHLS = url.toLowerCase().includes('.m3u8');
+
+            if (isHLS && Hls.isSupported()) {
                 if (hls) hls.destroy();
                 hls = new Hls();
                 hls.loadSource(url);
                 hls.attachMedia(video);
+
+                // Populate Quality Levels
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    const qSel = document.getElementById('qualitySel');
                     qSel.innerHTML = '<option value="-1">Auto Quality</option>';
-                    hls.levels.forEach((lvl, i) => { qSel.innerHTML += `<option value="${i}">${lvl.height}p</option>`; });
+                    hls.levels.forEach((lvl, i) => {
+                        qSel.innerHTML += `<option value="${i}">${lvl.height}p</option>`;
+                    });
                     video.play();
                 });
+
+                // Populate Audio Tracks
                 hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function() {
-                    const aSel = document.getElementById('audioSel');
                     const tracks = hls.audioTracks;
                     if (tracks.length > 0) {
-                        aSel.innerHTML = tracks.map((t, i) => `<option value="${i}">${t.name || t.lang || 'Track ' + i}</option>`).join('');
-                    } else { aSel.innerHTML = '<option>Default Audio</option>'; }
+                        aSel.innerHTML = tracks.map((t, i) => 
+                            `<option value="${i}">${t.name || t.lang || 'Track ' + i}</option>`
+                        ).join('');
+                    }
                 });
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+
+            } else {
+                if (hls) { hls.destroy(); hls = null; }
                 video.src = url;
-                video.addEventListener('loadedmetadata', () => video.play());
+                video.play();
             }
         }
 
         function closePlayer() {
             video.pause();
             if (hls) { hls.destroy(); hls = null; }
-            video.src = "";
+            video.removeAttribute('src');
+            video.load();
             document.getElementById('playerModal').style.display = 'none';
+            document.getElementById('settingsPanel').classList.remove('open');
         }
 
-        function changeQuality() { if(hls) hls.currentLevel = parseInt(document.getElementById('qualitySel').value); }
-        function changeAudio() { if(hls) hls.audioTrack = parseInt(document.getElementById('audioSel').value); }
-        function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
+        // --- Quality & Audio Change Handlers ---
+        function changeQuality() {
+            const val = parseInt(document.getElementById('qualitySel').value);
+            if(hls) {
+                hls.currentLevel = val; // Apply quality immediately
+            }
+        }
+
+        function changeAudio() {
+            const val = parseInt(document.getElementById('audioSel').value);
+            if(hls) {
+                hls.audioTrack = val; // Switch audio language
+            }
+        }
+
+        function toggleSettings() { 
+            document.getElementById('settingsPanel').classList.toggle('open'); 
+        }
 
         init();
     </script>
