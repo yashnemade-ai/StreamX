@@ -11,6 +11,15 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
     <style>
+        /* --- HIDE SCROLLBARS GLOBALLY --- */
+        *::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
         :root {
             --bg: #050505;
             --nav-bg: #000000;
@@ -109,8 +118,8 @@
         .quality-tag { background: var(--accent); color: #fff; font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; }
 
         /* --- PLAYER --- */
-        .player-modal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; }
-        #v-player { width: 100%; height: 100%; }
+        .player-modal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; overflow: hidden; }
+        #v-player { width: 100%; height: 100%; outline: none; border: none; }
         .player-top-bar { position: absolute; top: 0; width: 100%; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 3100; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
         .player-exit { font-size: 35px; color: #fff; cursor: pointer; }
         .player-settings-group { position: absolute; bottom: 80px; right: 30px; z-index: 3100; display: flex; flex-direction: column; align-items: flex-end; }
@@ -198,24 +207,20 @@
 
         async function fetchData() {
             try {
-                // Cache busting URL adding timestamp
                 const res = await fetch(`${JSON_URL}?t=${new Date().getTime()}`);
                 const data = await res.json();
                 
-                // Compare length to see if something changed
                 if (JSON.stringify(data) !== JSON.stringify(allMovies)) {
                     allMovies = data;
                     heroItems = allMovies.filter(m => !m.cat || m.cat.trim() === "");
                     gridItems = allMovies.filter(m => m.cat && m.cat.trim() !== "");
                     
-                    // Initial load or update grid
                     if(document.getElementById('movieGrid').innerHTML === "") {
                         renderSlider();
                         renderFilters();
                         renderGrid(gridItems);
                         startAutoSlide();
                     } else {
-                        // Only update grid to avoid breaking slider/search experience
                         renderGrid(gridItems);
                     }
                 }
@@ -225,7 +230,6 @@
         async function init() {
             await fetchData();
             initSwipe();
-            // Start Polling: Check for updates every 30 seconds
             setInterval(fetchData, 30000); 
         }
 
@@ -256,7 +260,8 @@
 
         function goToSlide(index) {
             currentIndex = index;
-            document.getElementById('sliderWrapper').style.transform = `translateX(-${currentIndex * 100}%)`;
+            const wrap = document.getElementById('sliderWrapper');
+            if(wrap) wrap.style.transform = `translateX(-${currentIndex * 100}%)`;
             const dots = document.querySelectorAll('.dot');
             const slides = document.querySelectorAll('.slide');
             dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex));
@@ -307,11 +312,13 @@
         }
 
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        
         function renderFilters() {
             const wrapper = document.getElementById('filterWrapper');
             const cats = [...new Set(gridItems.map(m => m.cat))];
             cats.forEach(c => wrapper.innerHTML += `<div class="filter-chip" onclick="filterData('${c}', this)">${c}</div>`);
         }
+        
         function filterData(cat, el) {
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
             el.classList.add('active');
@@ -321,73 +328,43 @@
         const modal = document.getElementById('playerModal');
         const video = document.getElementById('v-player');
 
-function openPlayer(url) {
-    if (!url) return;
-
-    const modal = document.getElementById('playerModal');
-    const video = document.getElementById('v-player');
-    modal.style.display = 'block';
-
-    // 1. Agar Hls.js supported hai (Chrome, Edge, Firefox, Android)
-    if (Hls.isSupported()) {
-        if (hls) hls.destroy(); // Purana instance khatam karein
-        
-        hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        
-        hls.on(Hls.Events.MANIFEST_PARSED, function() {
-            // Quality Selector Setup
-            const qSel = document.getElementById('qualitySel');
-            qSel.innerHTML = '<option value="-1">Auto Quality</option>';
-            hls.levels.forEach((lvl, i) => {
-                qSel.innerHTML += `<option value="${i}">${lvl.height}p</option>`;
-            });
-            video.play();
-        });
-
-        // Audio Track Setup
-        hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function() {
-            const aSel = document.getElementById('audioSel');
-            const tracks = hls.audioTracks;
-            if (tracks.length > 0) {
-                aSel.innerHTML = tracks.map((t, i) => 
-                    `<option value="${i}">${t.name || t.lang || 'Track ' + i}</option>`
-                ).join('');
-            } else {
-                aSel.innerHTML = '<option>Default Audio</option>';
+        function openPlayer(url) {
+            if (!url) return;
+            modal.style.display = 'block';
+            if (Hls.isSupported()) {
+                if (hls) hls.destroy();
+                hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    const qSel = document.getElementById('qualitySel');
+                    qSel.innerHTML = '<option value="-1">Auto Quality</option>';
+                    hls.levels.forEach((lvl, i) => { qSel.innerHTML += `<option value="${i}">${lvl.height}p</option>`; });
+                    video.play();
+                });
+                hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function() {
+                    const aSel = document.getElementById('audioSel');
+                    const tracks = hls.audioTracks;
+                    if (tracks.length > 0) {
+                        aSel.innerHTML = tracks.map((t, i) => `<option value="${i}">${t.name || t.lang || 'Track ' + i}</option>`).join('');
+                    } else { aSel.innerHTML = '<option>Default Audio</option>'; }
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url;
+                video.addEventListener('loadedmetadata', () => video.play());
             }
-        });
+        }
 
-    } 
-    // 2. Agar Browser native support karta hai (Jaise Safari ya iPhone)
-    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-        video.addEventListener('loadedmetadata', function() {
-            video.play();
-        });
-    }
-}
+        function closePlayer() {
+            video.pause();
+            if (hls) { hls.destroy(); hls = null; }
+            video.src = "";
+            document.getElementById('playerModal').style.display = 'none';
+        }
 
-// --- Player Band karne ka code ---
-function closePlayer() {
-    const video = document.getElementById('v-player');
-    video.pause();
-    
-    if (hls) {
-        hls.destroy();
-        hls = null;
-    }
-    
-    video.src = ""; // URL saaf karein
-    document.getElementById('playerModal').style.display = 'none';
-}
-
-
-        function changeQuality() { hls.currentLevel = parseInt(document.getElementById('qualitySel').value); }
-        function changeAudio() { hls.audioTrack = parseInt(document.getElementById('audioSel').value); }
+        function changeQuality() { if(hls) hls.currentLevel = parseInt(document.getElementById('qualitySel').value); }
+        function changeAudio() { if(hls) hls.audioTrack = parseInt(document.getElementById('audioSel').value); }
         function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
-        function closePlayer() { video.pause(); if(hls) { hls.destroy(); hls = null; } modal.style.display = 'none'; }
 
         init();
     </script>
