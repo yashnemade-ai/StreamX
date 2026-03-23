@@ -321,25 +321,33 @@
         const modal = document.getElementById('playerModal');
         const video = document.getElementById('v-player');
 
-        function openPlayer(url) {
-            modal.style.display = 'block';
-            if (Hls.isSupported() && url.includes('.m3u8')) {
-                if(hls) hls.destroy();
-                hls = new Hls();
-                hls.loadSource(url);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    const qSel = document.getElementById('qualitySel');
-                    qSel.innerHTML = '<option value="-1">Auto</option>';
-                    hls.levels.forEach((lvl, i) => { qSel.innerHTML += `<option value="${i}">${lvl.height}p</option>`; });
-                    video.play();
-                });
-                hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
-                    const aSel = document.getElementById('audioSel');
-                    aSel.innerHTML = hls.audioTracks.map((t, i) => `<option value="${i}">${t.name || t.lang}</option>`).join('') || '<option>Default</option>';
-                });
-            } else { video.src = url; video.play(); }
-        }
+        // --- UPDATE THIS FUNCTION IN YOUR MAIN HTML ---
+async function openPlayer(url) {
+    if(!url) return;
+
+    // 1. Apna Render URL yahan dalein (Piche /stream?url= lagana mat bhulna)
+    const MY_CONVERTER = "https://ffmpeg-audio-fixer.onrender.com/stream?url=";
+    
+    // 2. Final URL taiyar karein
+    const finalUrl = MY_CONVERTER + encodeURIComponent(url);
+
+    // 3. Player modal dikhayein
+    const modal = document.getElementById('playerModal');
+    modal.style.display = 'block';
+    
+    const video = document.getElementById('v-player');
+
+    // 4. Video load karein
+    // Kyunki humne audio convert kar diya hai, ab ye normal MP4 ki tarah chalega
+    video.src = finalUrl;
+    
+    try {
+        await video.play();
+        console.log("Stream started with Audio!");
+    } catch (e) {
+        console.error("Autoplay blocked or error:", e);
+    }
+}
 
         function changeQuality() { hls.currentLevel = parseInt(document.getElementById('qualitySel').value); }
         function changeAudio() { hls.audioTrack = parseInt(document.getElementById('audioSel').value); }
