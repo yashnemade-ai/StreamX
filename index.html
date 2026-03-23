@@ -321,20 +321,67 @@
         const modal = document.getElementById('playerModal');
         const video = document.getElementById('v-player');
 
-// 5. Player Logic (M3U8 Support)
-        function openPlayer(url) {
-            document.getElementById('playerModal').style.display = 'flex';
-            player.src({
-                src: url,
-                type: url.includes('.mpd') ? 'application/dash+xml' : 'application/x-mpegURL'
-            });
-            player.play();
-        }
+function openPlayer(url) {
+    if (!url) return;
 
-        function closePlayer() {
-            player.pause();
-            document.getElementById('playerModal').style.display = 'none';
-        }
+    const modal = document.getElementById('playerModal');
+    const video = document.getElementById('v-player');
+    modal.style.display = 'block';
+
+    // 1. Agar Hls.js supported hai (Chrome, Edge, Firefox, Android)
+    if (Hls.isSupported()) {
+        if (hls) hls.destroy(); // Purana instance khatam karein
+        
+        hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, function() {
+            // Quality Selector Setup
+            const qSel = document.getElementById('qualitySel');
+            qSel.innerHTML = '<option value="-1">Auto Quality</option>';
+            hls.levels.forEach((lvl, i) => {
+                qSel.innerHTML += `<option value="${i}">${lvl.height}p</option>`;
+            });
+            video.play();
+        });
+
+        // Audio Track Setup
+        hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function() {
+            const aSel = document.getElementById('audioSel');
+            const tracks = hls.audioTracks;
+            if (tracks.length > 0) {
+                aSel.innerHTML = tracks.map((t, i) => 
+                    `<option value="${i}">${t.name || t.lang || 'Track ' + i}</option>`
+                ).join('');
+            } else {
+                aSel.innerHTML = '<option>Default Audio</option>';
+            }
+        });
+
+    } 
+    // 2. Agar Browser native support karta hai (Jaise Safari ya iPhone)
+    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', function() {
+            video.play();
+        });
+    }
+}
+
+// --- Player Band karne ka code ---
+function closePlayer() {
+    const video = document.getElementById('v-player');
+    video.pause();
+    
+    if (hls) {
+        hls.destroy();
+        hls = null;
+    }
+    
+    video.src = ""; // URL saaf karein
+    document.getElementById('playerModal').style.display = 'none';
+}
 
 
         function changeQuality() { hls.currentLevel = parseInt(document.getElementById('qualitySel').value); }
