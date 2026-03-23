@@ -321,23 +321,48 @@
         const modal = document.getElementById('playerModal');
         const video = document.getElementById('v-player');
 
-        // --- UPDATE THIS FUNCTION IN YOUR MAIN HTML ---
-function openPlayer(url) {
-            if(!url) return;
-            const modal = document.getElementById('playerModal');
-            const engine = document.getElementById('playerEngine');
-            
-            modal.style.display = 'block';
-            
-            // Yeh Professional Engine aapke link ko automatically fix karega (Audio & CORS)
-            // No extension needed, No license needed.
-            engine.src = `https://m3u8player.net/player.php?url=${encodeURIComponent(url)}`;
-        }
+async function openPlayer(url) {
+    if(!url) return;
 
-        function closePlayer() {
-            document.getElementById('playerEngine').src = "";
-            document.getElementById('playerModal').style.display = 'none';
+    // 1. Aapka Render Proxy URL
+    const MY_CONVERTER = "https://ffmpeg-audio-fixer.onrender.com/stream?url=";
+    
+    // 2. Video Element aur Modal set karein
+    const modal = document.getElementById('playerModal');
+    const video = document.getElementById('v-player');
+    
+    modal.style.display = 'block';
+
+    // IMPORTANT: CORS Extension ke saath kaam karne ke liye ye attribute zaroori hai
+    video.crossOrigin = "anonymous"; 
+
+    // 3. Final URL Taiyar karein
+    // EncodeURIComponent use karna zaroori hai taaki '?' aur '&' symbols link kharab na karein
+    const finalUrl = MY_CONVERTER + encodeURIComponent(url);
+
+    // 4. Video Source set karein
+    video.src = finalUrl;
+    video.load(); // Browser ko naya source load karne ke liye force karein
+
+    // 5. Play karne ki koshish karein
+    try {
+        console.log("Connecting to Render Server... (Wait for wake-up)");
+        
+        // Render Free tier par hai toh pehli baar load hone mein 30-50 seconds lag sakte hain
+        const playPromise = video.play();
+
+        if (playPromise !== undefined) {
+            playPromise.then(_ => {
+                console.log("Stream started successfully with converted audio!");
+            }).catch(error => {
+                console.error("Playback failed. Please click the Play button manually.", error);
+                // Agar autoplay block ho jaye toh manual play allow karein
+            });
         }
+    } catch (e) {
+        console.error("Connection error:", e);
+    }
+}
 
         function changeQuality() { hls.currentLevel = parseInt(document.getElementById('qualitySel').value); }
         function changeAudio() { hls.audioTrack = parseInt(document.getElementById('audioSel').value); }
