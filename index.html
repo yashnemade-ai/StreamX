@@ -322,32 +322,22 @@
         const video = document.getElementById('v-player');
 
         // --- UPDATE THIS FUNCTION IN YOUR MAIN HTML ---
-async function openPlayer(url) {
-    if(!url) return;
+function openPlayer(url) {
+            if(!url) return;
+            const modal = document.getElementById('playerModal');
+            const engine = document.getElementById('playerEngine');
+            
+            modal.style.display = 'block';
+            
+            // Yeh Professional Engine aapke link ko automatically fix karega (Audio & CORS)
+            // No extension needed, No license needed.
+            engine.src = `https://m3u8player.net/player.php?url=${encodeURIComponent(url)}`;
+        }
 
-    // 1. Apna Render URL yahan dalein (Piche /stream?url= lagana mat bhulna)
-    const MY_CONVERTER = "https://ffmpeg-audio-fixer.onrender.com/stream?url=";
-    
-    // 2. Final URL taiyar karein
-    const finalUrl = MY_CONVERTER + encodeURIComponent(url);
-
-    // 3. Player modal dikhayein
-    const modal = document.getElementById('playerModal');
-    modal.style.display = 'block';
-    
-    const video = document.getElementById('v-player');
-
-    // 4. Video load karein
-    // Kyunki humne audio convert kar diya hai, ab ye normal MP4 ki tarah chalega
-    video.src = finalUrl;
-    
-    try {
-        await video.play();
-        console.log("Stream started with Audio!");
-    } catch (e) {
-        console.error("Autoplay blocked or error:", e);
-    }
-}
+        function closePlayer() {
+            document.getElementById('playerEngine').src = "";
+            document.getElementById('playerModal').style.display = 'none';
+        }
 
         function changeQuality() { hls.currentLevel = parseInt(document.getElementById('qualitySel').value); }
         function changeAudio() { hls.audioTrack = parseInt(document.getElementById('audioSel').value); }
