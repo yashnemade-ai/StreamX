@@ -331,7 +331,7 @@
             aSel.innerHTML = '<option>Default Audio</option>';
 
             // Fix: Detect PHP and M3U8 for HLS
-            const isHLS = url.toLowerCase().includes('.m3u8') || url.toLowerCase().includes('.php') || url.toLowerCase().includes('.m3u');
+            const isHLS = url.toLowerCase().includes('.m3u8') || url.toLowerCase().includes('.php') || url.toLowerCase().includes('.m3u') || url.toLowerCase().includes('.ts');
 
             if (isHLS && Hls.isSupported()) {
                 if (hls) hls.destroy();
