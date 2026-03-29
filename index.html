@@ -330,8 +330,10 @@
             qSel.innerHTML = '<option>Auto Quality</option>';
             aSel.innerHTML = '<option>Default Audio</option>';
 
-            const isHLS = url.toLowerCase().includes('.m3u8') || url.toLowerCase().includes('.php');
-;
+            const isM3U8 = url.toLowerCase().includes('.m3u8') || url.toLowerCase().includes('.php');
+            const isMPD = url.toLowerCase().includes('.mpd');
+
+
 
             if (isHLS && Hls.isSupported()) {
                 if (hls) hls.destroy();
