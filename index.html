@@ -205,6 +205,7 @@
     </div>
 
     <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.compiled.js"></script>
     <script>
         AOS.init({ duration: 800 });
         let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
@@ -321,37 +322,103 @@
         const modal = document.getElementById('playerModal');
         const video = document.getElementById('v-player');
 
-        function openPlayer(url) {
-            if (!url) return;
-            modal.style.display = 'block';
+        async function openPlayer(url) {
+    if (!url) return;
 
-            const qSel = document.getElementById('qualitySel');
-            const aSel = document.getElementById('audioSel');
-            qSel.innerHTML = '<option>Auto Quality</option>';
-            aSel.innerHTML = '<option>Default Audio</option>';
+    modal.style.display = 'block';
 
-            // Fix: Detect PHP and M3U8 for HLS
-            const isHLS = url.toLowerCase().includes('.m3u8') || url.toLowerCase().includes('.php') || url.toLowerCase().includes('.m3u') || url.toLowerCase().includes('.ts');
+    const proxyUrl = '/api/proxy?url=' + encodeURIComponent(url);
+    const video = document.getElementById('v-player');
 
-            if (isHLS && Hls.isSupported()) {
-                if (hls) hls.destroy();
-                hls = new Hls();
-                hls.loadSource(url);
-                hls.attachMedia(video);
+    // reset selectors
+    document.getElementById('qualitySel').innerHTML = '<option>Auto Quality</option>';
+    document.getElementById('audioSel').innerHTML = '<option>Default Audio</option>';
 
-                hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    qSel.innerHTML = '<option value="-1">Auto Quality</option>';
-                    hls.levels.forEach((lvl, i) => {
-                        qSel.innerHTML += `<option value="${i}">${lvl.height}p</option>`;
-                    });
-                    video.play();
+    // cleanup old players
+    if (window.hls) {
+        window.hls.destroy();
+        window.hls = null;
+    }
+    if (window.player) {
+        await window.player.destroy();
+        window.player = null;
+    }
+
+    const isM3U8 = url.toLowerCase().includes('.m3u8') || url.toLowerCase().includes('.php');
+    const isMPD = url.toLowerCase().includes('.mpd');
+
+    try {
+        // 🔥 DASH → Shaka
+        if (isMPD) {
+            const player = new shaka.Player(video);
+            window.player = player;
+
+            player.addEventListener('error', e => {
+                console.error('Shaka error:', e.detail);
+            });
+
+            await player.load(proxyUrl);
+            video.play();
+        }
+
+        // 🔥 HLS → HLS.js (best compatibility)
+        else if (isM3U8 && Hls.isSupported()) {
+            const hls = new Hls();
+            window.hls = hls;
+
+            hls.loadSource(proxyUrl);
+            hls.attachMedia(video);
+
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                video.play();
+            });
+
+            // quality
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                const qSel = document.getElementById('qualitySel');
+                qSel.innerHTML = '<option value="-1">Auto</option>';
+                hls.levels.forEach((lvl, i) => {
+                    qSel.innerHTML += `<option value="${i}">${lvl.height}p</option>`;
                 });
+            });
 
-                hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function() {
-                    const tracks = hls.audioTracks;
-                    if (tracks.length > 0) {
-                        aSel.innerHTML = tracks.map((t, i) => 
-                            `<option value="${i}">${t.name || t.lang || 'Track ' + i}</option>`
-                        ).join('');
-                    }
-                
+            // audio
+            hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, function() {
+                const aSel = document.getElementById('audioSel');
+                const tracks = hls.audioTracks;
+                if (tracks.length > 0) {
+                    aSel.innerHTML = tracks.map((t, i) => 
+                        `<option value="${i}">${t.name || t.lang || 'Track ' + i}</option>`
+                    ).join('');
+                }
+            });
+        }
+
+        // 🔥 MP4 / direct
+        else {
+            video.src = proxyUrl;
+            video.play();
+        }
+
+    } catch (e) {
+        console.error("Playback error:", e);
+    }
+}
+
+        function closePlayer() {
+            video.pause();
+            if (hls) { hls.destroy(); hls = null; }
+            video.removeAttribute('src');
+            video.load();
+            document.getElementById('playerModal').style.display = 'none';
+            document.getElementById('settingsPanel').classList.remove('open');
+        }
+
+        function changeQuality() { if(hls) hls.currentLevel = parseInt(document.getElementById('qualitySel').value); }
+        function changeAudio() { if(hls) hls.audioTrack = parseInt(document.getElementById('audioSel').value); }
+        function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
+
+        init();
+    </script>
+</body>
+</html>
