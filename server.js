@@ -1,10 +1,16 @@
-const express = require("express");
+import express from "express";
+import fetch from "node-fetch";
+
 const app = express();
 
-app.use(express.static("public"));
+app.get("/proxy", async (req, res) => {
+    const url = req.query.url;
 
-const PORT = process.env.PORT || 10000;
+    const response = await fetch(url);
+    const data = await response.text();
 
-app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+    res.set("Access-Control-Allow-Origin", "*");
+    res.send(data);
 });
+
+app.listen(3000, () => console.log("Server running"));
