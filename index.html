@@ -241,7 +241,7 @@
                 else if (lowUrl.includes('.m3u8') || lowUrl.includes('.php') || lowUrl.includes('.ts') || lowUrl.includes('.m3u')) {
                     if (Hls.isSupported()) {
                         hls = new Hls();
-                        hls.loadSource(`/proxy?url=${encodeURIComponent(cleanUrl)}`);
+                        hls.loadSource(cleanUrl);
                         hls.attachMedia(video);
                         hls.on(Hls.Events.MANIFEST_PARSED, () => {
                             setupHlsTracks();
