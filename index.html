@@ -210,7 +210,7 @@
             setInterval(fetchData, 30000); 
         }
 
-      const PROXY_SERVER = "https://streamx-backend-plh1.onrender.com/proxy?url="; // Apna link check karle sahi hai ya nahi
+      const PROXY_SERVER = "https://streamx-backend-plh1.onrender.com/proxy?url="; 
 
 async function openPlayer(url) {
     if (!url) return;
@@ -218,33 +218,36 @@ async function openPlayer(url) {
     const video = document.getElementById('v-player');
     modal.style.display = 'block';
 
-    // Cleanup
+    // 1. Reset Selectors
+    document.getElementById('qualitySel').innerHTML = '<option>Auto Quality</option>';
+    document.getElementById('audioSel').innerHTML = '<option>Default Audio</option>';
+
+    // 2. Clear Old Instances
     if (window.hls) { window.hls.destroy(); window.hls = null; }
     if (window.shaka) { await window.shaka.unload(); window.shaka = null; }
-    video.src = "";
+    video.removeAttribute('src');
+    video.load();
 
     const cleanUrl = url.split('|')[0].trim();
+    const proxiedUrl = PROXY_SERVER + encodeURIComponent(cleanUrl);
     const lowUrl = cleanUrl.toLowerCase();
-    const proxiedUrl = PROXY_SERVER + encodeURIComponent(url);
 
     try {
         if (lowUrl.includes('.mpd')) {
             const player = new shaka.Player(video);
             window.shaka = player;
             player.getNetworkingEngine().registerRequestFilter((type, request) => {
-                // Loop Protection: Agar URL mein pehle se proxy hai toh aur na jodein
                 if (request.uris[0].indexOf(PROXY_SERVER) === -1) {
                     request.uris[0] = PROXY_SERVER + encodeURIComponent(request.uris[0]);
                 }
             });
             await player.load(proxiedUrl);
+            video.play();
         } 
         else if (lowUrl.includes('.m3u8') || lowUrl.includes('.php') || lowUrl.includes('.ts')) {
             if (Hls.isSupported()) {
                 const hls = new Hls({
                     xhrSetup: function(xhr, segmentUrl) {
-                        // 🛑 LOOP PROTECTION: 
-                        // Sirf tabhi proxy lagao jab URL mein pehle se PROXY_SERVER na ho
                         if (segmentUrl.indexOf(PROXY_SERVER) === -1) {
                             const newUrl = PROXY_SERVER + encodeURIComponent(segmentUrl);
                             xhr.open('GET', newUrl, true);
@@ -264,10 +267,9 @@ async function openPlayer(url) {
             video.play();
         }
     } catch (e) {
-        console.error("Playback failed", e);
+        console.log("Playback failed:", e);
     }
 }
-
         function setupHlsTracks() {
             const qSel = document.getElementById('qualitySel');
             qSel.innerHTML = '<option value="-1">Auto</option>' + hls.levels.map((lvl, i) => `<option value="${i}">${lvl.height}p</option>`).join('');
