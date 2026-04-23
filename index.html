@@ -211,7 +211,7 @@
         }
 
         // ✅ APNA RENDER BACKEND URL YAHAN DALEIN
-const PROXY_SERVER = "https://your-app-name.onrender.com/proxy?url=";
+const PROXY_SERVER = "https://streamx-backend-plh1.onrender.com/proxy?url=";
 
 async function openPlayer(url) {
     if (!url) return;
@@ -219,8 +219,6 @@ async function openPlayer(url) {
     const video = document.getElementById('v-player');
     modal.style.display = 'block';
 
-    // 1. Pipe format ko handle karein aur Poora URL encode karein
-    // Hum poora string (with headers) backend ko bhejenge taaki Python use split kar sake
     const cleanUrl = url.split('|')[0].trim();
     const proxiedUrl = PROXY_SERVER + encodeURIComponent(url); 
     const lowUrl = cleanUrl.toLowerCase();
