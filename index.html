@@ -209,71 +209,57 @@
             initSwipe();
             setInterval(fetchData, 30000); 
         }
+    // --- UPDATED PLAYBACK ENGINE ---
+    async function openPlayer(url) {
+        if (!url) return;
+        const modal = document.getElementById('playerModal');
+        const video = document.getElementById('v-player');
+        modal.style.display = 'block';
 
-      // ✅ Apna sahi Render URL yahan check karke dalein
-const PROXY_SERVER = "https://streamx-backend-plh1.onrender.com/proxy?url="; 
+        // Handles both plain URLs and URLs with pipe headers
+        const cleanUrl = url.split('|')[0].trim();
+        const lowUrl = cleanUrl.toLowerCase();
 
-async function openPlayer(url) {
-    if (!url) return;
-    const modal = document.getElementById('playerModal');
-    const video = document.getElementById('v-player');
-    modal.style.display = 'block';
+        // Reset UI selections
+        document.getElementById('qualitySel').innerHTML = '<option>Auto Quality</option>';
+        document.getElementById('audioSel').innerHTML = '<option>Default Audio</option>';
 
-    // UI Reset
-    document.getElementById('qualitySel').innerHTML = '<option>Auto Quality</option>';
-    document.getElementById('audioSel').innerHTML = '<option>Default Audio</option>';
+        // 1. Cleanup existing instances
+        if (hls) { hls.destroy(); hls = null; }
+        if (shakaPlayer) { await shakaPlayer.unload(); }
+        video.src = "";
 
-    // Cleanup
-    if (window.hls) { window.hls.destroy(); window.hls = null; }
-    if (window.shaka) { await window.shaka.unload(); window.shaka = null; }
-    video.removeAttribute('src');
-    video.load();
-
-    const cleanUrl = url.split('|')[0].trim();
-    const isMPD = cleanUrl.toLowerCase().includes('.mpd');
-    const proxiedUrl = PROXY_SERVER + encodeURIComponent(url); // Send full string with | headers
-
-    try {
-        if (isMPD) {
-            const player = new shaka.Player(video);
-            window.shaka = player;
-            player.getNetworkingEngine().registerRequestFilter((type, request) => {
-                if (request.uris[0].indexOf(PROXY_SERVER) === -1) {
-                    request.uris[0] = PROXY_SERVER + encodeURIComponent(request.uris[0]);
+        try {
+            // CASE: MPD (DASH) -> Shaka
+            if (lowUrl.includes('.mpd')) {
+                if (!shakaPlayer) shakaPlayer = new shaka.Player(video);
+                await shakaPlayer.load(cleanUrl);
+                setupShakaTracks();
+            } 
+            // CASE: M3U8, PHP, TS -> Hls.js
+            else if (lowUrl.includes('.m3u8') || lowUrl.includes('.php') || lowUrl.includes('.ts') || lowUrl.includes('.m3u')) {
+                if (Hls.isSupported()) {
+                    hls = new Hls();
+                    hls.loadSource(cleanUrl);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                        setupHlsTracks();
+                        video.play();
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = cleanUrl;
+                    video.play();
                 }
-            });
-            await player.load(proxiedUrl);
-            video.play();
-        } 
-        else {
-            if (Hls.isSupported()) {
-                const hls = new Hls({
-                    // Extreme buffer for slow Render proxy
-                    maxBufferLength: 30,
-                    maxMaxBufferLength: 60,
-                    xhrSetup: function(xhr, segmentUrl) {
-                        if (segmentUrl.indexOf(PROXY_SERVER) === -1) {
-                            const newUrl = PROXY_SERVER + encodeURIComponent(segmentUrl);
-                            xhr.open('GET', newUrl, true);
-                        }
-                    }
-                });
-                window.hls = hls;
-                hls.loadSource(proxiedUrl);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    setupHlsTracks(); // Ensure this function exists in your script
-                    video.play().catch(() => {});
-                });
-            } else {
-                video.src = proxiedUrl;
+            } 
+            // CASE: Standard MP4/Direct
+            else {
+                video.src = cleanUrl;
                 video.play();
             }
+        } catch (e) {
+            console.error("Playback failed:", e);
         }
-    } catch (e) {
-        console.error("Engine Error:", e);
     }
-}
         function setupHlsTracks() {
             const qSel = document.getElementById('qualitySel');
             qSel.innerHTML = '<option value="-1">Auto</option>' + hls.levels.map((lvl, i) => `<option value="${i}">${lvl.height}p</option>`).join('');
