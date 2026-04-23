@@ -210,7 +210,8 @@
             setInterval(fetchData, 30000); 
         }
 
-      const PROXY_SERVER = "https://streamx-backend-plh1.onrender.com/proxy?url="; 
+      // ✅ Apna sahi Render URL yahan check karke dalein
+const PROXY_SERVER = "https://streamx-backend-plh1.onrender.com/proxy?url="; 
 
 async function openPlayer(url) {
     if (!url) return;
@@ -218,22 +219,22 @@ async function openPlayer(url) {
     const video = document.getElementById('v-player');
     modal.style.display = 'block';
 
-    // 1. Reset Selectors
+    // UI Reset
     document.getElementById('qualitySel').innerHTML = '<option>Auto Quality</option>';
     document.getElementById('audioSel').innerHTML = '<option>Default Audio</option>';
 
-    // 2. Clear Old Instances
+    // Cleanup
     if (window.hls) { window.hls.destroy(); window.hls = null; }
     if (window.shaka) { await window.shaka.unload(); window.shaka = null; }
     video.removeAttribute('src');
     video.load();
 
     const cleanUrl = url.split('|')[0].trim();
-    const proxiedUrl = PROXY_SERVER + encodeURIComponent(cleanUrl);
-    const lowUrl = cleanUrl.toLowerCase();
+    const isMPD = cleanUrl.toLowerCase().includes('.mpd');
+    const proxiedUrl = PROXY_SERVER + encodeURIComponent(url); // Send full string with | headers
 
     try {
-        if (lowUrl.includes('.mpd')) {
+        if (isMPD) {
             const player = new shaka.Player(video);
             window.shaka = player;
             player.getNetworkingEngine().registerRequestFilter((type, request) => {
@@ -244,9 +245,12 @@ async function openPlayer(url) {
             await player.load(proxiedUrl);
             video.play();
         } 
-        else if (lowUrl.includes('.m3u8') || lowUrl.includes('.php') || lowUrl.includes('.ts')) {
+        else {
             if (Hls.isSupported()) {
                 const hls = new Hls({
+                    // Extreme buffer for slow Render proxy
+                    maxBufferLength: 30,
+                    maxMaxBufferLength: 60,
                     xhrSetup: function(xhr, segmentUrl) {
                         if (segmentUrl.indexOf(PROXY_SERVER) === -1) {
                             const newUrl = PROXY_SERVER + encodeURIComponent(segmentUrl);
@@ -257,17 +261,17 @@ async function openPlayer(url) {
                 window.hls = hls;
                 hls.loadSource(proxiedUrl);
                 hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    setupHlsTracks(); // Ensure this function exists in your script
+                    video.play().catch(() => {});
+                });
             } else {
                 video.src = proxiedUrl;
                 video.play();
             }
-        } else {
-            video.src = proxiedUrl;
-            video.play();
         }
     } catch (e) {
-        console.log("Playback failed:", e);
+        console.error("Engine Error:", e);
     }
 }
         function setupHlsTracks() {
