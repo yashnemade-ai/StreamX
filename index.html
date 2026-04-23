@@ -210,8 +210,7 @@
             setInterval(fetchData, 30000); 
         }
 
-        // ✅ APNA RENDER BACKEND URL YAHAN DALEIN
-const PROXY_SERVER = "https://streamx-backend-plh1.onrender.com/proxy?url=";
+      const PROXY_SERVER = "https://streamx-backend-plh1.onrender.com/proxy?url="; // Apna link check karle sahi hai ya nahi
 
 async function openPlayer(url) {
     if (!url) return;
@@ -219,72 +218,53 @@ async function openPlayer(url) {
     const video = document.getElementById('v-player');
     modal.style.display = 'block';
 
-    const cleanUrl = url.split('|')[0].trim();
-    const proxiedUrl = PROXY_SERVER + encodeURIComponent(url); 
-    const lowUrl = cleanUrl.toLowerCase();
-
-    // Reset UI selections
-    document.getElementById('qualitySel').innerHTML = '<option>Auto Quality</option>';
-    document.getElementById('audioSel').innerHTML = '<option>Default Audio</option>';
-
-    // 2. Cleanup existing instances
-    if (hls) { hls.destroy(); hls = null; }
-    if (shakaPlayer) { await shakaPlayer.unload(); }
+    // Cleanup
+    if (window.hls) { window.hls.destroy(); window.hls = null; }
+    if (window.shaka) { await window.shaka.unload(); window.shaka = null; }
     video.src = "";
 
-    try {
-        // --- CASE 1: MPD (DASH) -> Shaka Player ---
-        if (lowUrl.includes('.mpd')) {
-            if (!shakaPlayer) shakaPlayer = new shaka.Player(video);
+    const cleanUrl = url.split('|')[0].trim();
+    const lowUrl = cleanUrl.toLowerCase();
+    const proxiedUrl = PROXY_SERVER + encodeURIComponent(url);
 
-            // 🚀 SHAKA SEGMENT PROXY: Har segment ko backend se nikalna
-            shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
+    try {
+        if (lowUrl.includes('.mpd')) {
+            const player = new shaka.Player(video);
+            window.shaka = player;
+            player.getNetworkingEngine().registerRequestFilter((type, request) => {
+                // Loop Protection: Agar URL mein pehle se proxy hai toh aur na jodein
                 if (request.uris[0].indexOf(PROXY_SERVER) === -1) {
                     request.uris[0] = PROXY_SERVER + encodeURIComponent(request.uris[0]);
                 }
             });
-
-            await shakaPlayer.load(proxiedUrl);
-            setupShakaTracks();
+            await player.load(proxiedUrl);
         } 
-        
-        // --- CASE 2: M3U8, PHP, TS -> Hls.js ---
-        else if (lowUrl.includes('.m3u8') || lowUrl.includes('.php') || lowUrl.includes('.ts') || lowUrl.includes('.m3u')) {
+        else if (lowUrl.includes('.m3u8') || lowUrl.includes('.php') || lowUrl.includes('.ts')) {
             if (Hls.isSupported()) {
-                hls = new Hls({
-                    // 🚀 HLS SEGMENT PROXY: Har .ts file ko backend se mangwana
+                const hls = new Hls({
                     xhrSetup: function(xhr, segmentUrl) {
+                        // 🛑 LOOP PROTECTION: 
+                        // Sirf tabhi proxy lagao jab URL mein pehle se PROXY_SERVER na ho
                         if (segmentUrl.indexOf(PROXY_SERVER) === -1) {
                             const newUrl = PROXY_SERVER + encodeURIComponent(segmentUrl);
                             xhr.open('GET', newUrl, true);
                         }
                     }
                 });
+                window.hls = hls;
                 hls.loadSource(proxiedUrl);
                 hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    setupHlsTracks();
-                    video.play();
-                });
-            } 
-            // iPhone/Safari fallback
-            else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+            } else {
                 video.src = proxiedUrl;
                 video.play();
             }
-        } 
-        
-        // --- CASE 3: Standard MP4/Direct Play ---
-        else {
+        } else {
             video.src = proxiedUrl;
             video.play();
         }
-
     } catch (e) {
-        console.error("Playback Engine Error:", e);
-        // Fallback: Try direct proxied link
-        video.src = proxiedUrl;
-        video.play();
+        console.error("Playback failed", e);
     }
 }
 
