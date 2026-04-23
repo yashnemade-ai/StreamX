@@ -4,110 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STREAMX</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    
+    <!-- Video Engines -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.compiled.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <style>
+        /* --- UI RESTORED: HIDE SCROLLBARS --- */
+        *::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
 
-<!-- Video Engines -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.6/shaka-player.compiled.js"></script>
+        :root {
+            --bg: #050505; --nav-bg: #000000; --card-bg: #0d0d0f;
+            --text: #ffffff; --text-dim: #b3b3b3; --accent: #E50914;
+            --border: #1a1a1a; --shadow: rgba(229, 9, 20, 0.4);
+        }
 
-<style>
-    /* --- UI RESTORED: HIDE SCROLLBARS --- */
-    *::-webkit-scrollbar { display: none; }
-    * { -ms-overflow-style: none; scrollbar-width: none; }
+        [data-theme="light"] {
+            --bg: #f5f5f7; --nav-bg: #ffffff; --card-bg: #ffffff;
+            --text: #1d1d1f; --text-dim: #6e6e73; --accent: #E50914;
+            --border: #d2d2d7; --shadow: rgba(0, 0, 0, 0.1);
+        }
 
-    :root {
-        --bg: #050505; --nav-bg: #000000; --card-bg: #0d0d0f;
-        --text: #ffffff; --text-dim: #b3b3b3; --accent: #E50914;
-        --border: #1a1a1a; --shadow: rgba(229, 9, 20, 0.4);
-    }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); overflow-x: hidden; transition: background 0.3s; }
 
-    [data-theme="light"] {
-        --bg: #f5f5f7; --nav-bg: #ffffff; --card-bg: #ffffff;
-        --text: #1d1d1f; --text-dim: #6e6e73; --accent: #E50914;
-        --border: #d2d2d7; --shadow: rgba(0, 0, 0, 0.1);
-    }
+        /* --- NAVBAR --- */
+        nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 6%; background: var(--nav-bg);
+            position: fixed; width: 100%; top: 0; z-index: 1000;
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-left { display: flex; align-items: center; gap: 20px; }
+        .logo { font-size: 26px; font-weight: 900; cursor: pointer; color: var(--text); text-decoration: none; }
+        .logo span.red { color: var(--accent); }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-    body { background-color: var(--bg); color: var(--text); overflow-x: hidden; transition: background 0.3s; }
+        .search-box {
+            background: rgba(120, 120, 120, 0.1); border: 1px solid var(--border);
+            padding: 8px 18px; border-radius: 50px; display: flex; align-items: center;
+            transition: 0.4s; width: 200px;
+        }
+        .search-box:focus-within { width: 300px; border-color: var(--accent); }
+        .search-box input { background: transparent; border: none; color: var(--text); outline: none; width: 100%; margin-left: 10px; }
 
-    /* --- NAVBAR --- */
-    nav {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 10px 6%; background: var(--nav-bg);
-        position: fixed; width: 100%; top: 0; z-index: 1000;
-        border-bottom: 1px solid var(--border);
-    }
-    .nav-left { display: flex; align-items: center; gap: 20px; }
-    .logo { font-size: 26px; font-weight: 900; cursor: pointer; color: var(--text); text-decoration: none; }
-    .logo span.red { color: var(--accent); }
+        .theme-btn { background: none; border: none; color: var(--text); font-size: 20px; cursor: pointer; }
 
-    .search-box {
-        background: rgba(120, 120, 120, 0.1); border: 1px solid var(--border);
-        padding: 8px 18px; border-radius: 50px; display: flex; align-items: center;
-        transition: 0.4s; width: 200px;
-    }
-    .search-box:focus-within { width: 300px; border-color: var(--accent); }
-    .search-box input { background: transparent; border: none; color: var(--text); outline: none; width: 100%; margin-left: 10px; }
+        /* --- SIDEBAR --- */
+        .sidebar {
+            position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
+            background: var(--nav-bg) !important; z-index: 2000; border-right: 1px solid var(--border);
+            padding: 40px 30px; transition: 0.5s; color: var(--text);
+        }
+        .sidebar.open { left: 0; }
+        .sidebar-close { position: absolute; top: 25px; right: 25px; font-size: 24px; cursor: pointer; color: var(--text); }
+        .sidebar-contact { color: var(--accent) !important; font-weight: 600 !important; text-decoration: none; font-size: 16px; }
 
-    .theme-btn { background: none; border: none; color: var(--text); font-size: 20px; cursor: pointer; }
+        .cors-note { background: rgba(229, 9, 20, 0.1); border-left: 3px solid var(--accent); padding: 12px; margin-top: 20px; font-size: 13px; border-radius: 4px; line-height: 1.5; }
 
-    /* --- SIDEBAR --- */
-    .sidebar {
-        position: fixed; top: 0; left: -320px; width: 300px; height: 100%;
-        background: var(--nav-bg) !important; z-index: 2000; border-right: 1px solid var(--border);
-        padding: 40px 30px; transition: 0.5s; color: var(--text);
-    }
-    .sidebar.open { left: 0; }
-    .sidebar-close { position: absolute; top: 25px; right: 25px; font-size: 24px; cursor: pointer; color: var(--text); }
-    .sidebar-contact { color: var(--accent) !important; font-weight: 600 !important; text-decoration: none; font-size: 16px; }
+        /* --- BANNER --- */
+        .slider-container { width: 100%; height: 75vh; position: relative; overflow: hidden; background: #000; margin-top: 55px; touch-action: pan-y; }
+        .slider-wrapper { display: flex; height: 100%; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .slide { min-width: 100%; height: 100%; position: relative; overflow: hidden; }
+        .slide img { width: 100%; height: 100%; object-fit: 100% 100%; transition: transform 10s linear; } 
+        .slide.active img { transform: scale(1.05); } 
+        .slide-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 45%); }
+        .slide-content { position: absolute; bottom: 12%; left: 6%; z-index: 10; max-width: 450px; }
+        .badge { background: var(--accent); color: white; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; display: inline-block; }
+        .slide-content h1 { font-size: clamp(24px, 4vw, 38px); font-weight: 900; line-height: 1.2; margin-bottom: 10px; color: #fff; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
+        .slide-content p { color: #eee; font-size: 14px; margin-bottom: 20px; text-shadow: 1px 1px 5px rgba(0,0,0,0.8); }
+        .btn-watch-main { background: var(--accent); color: #fff; padding: 10px 25px; border: none; border-radius: 6px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; transition: 0.3s; }
 
-    .cors-note { background: rgba(229, 9, 20, 0.1); border-left: 3px solid var(--accent); padding: 12px; margin-top: 20px; font-size: 13px; border-radius: 4px; line-height: 1.5; }
+        .slider-dots { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 20; }
+        .dot { width: 10px; height: 10px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; transition: 0.3s; }
+        .dot.active { background: var(--accent); width: 25px; border-radius: 10px; }
 
-    /* --- BANNER --- */
-    .slider-container { width: 100%; height: 75vh; position: relative; overflow: hidden; background: #000; margin-top: 55px; touch-action: pan-y; }
-    .slider-wrapper { display: flex; height: 100%; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-    .slide { min-width: 100%; height: 100%; position: relative; overflow: hidden; }
-    .slide img { width: 100%; height: 100%; object-fit: 100% 100%; transition: transform 10s linear; } 
-    .slide.active img { transform: scale(1.05); } 
-    .slide-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 45%); }
-    .slide-content { position: absolute; bottom: 12%; left: 6%; z-index: 10; max-width: 450px; }
-    .badge { background: var(--accent); color: white; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; display: inline-block; }
-    .slide-content h1 { font-size: clamp(24px, 4vw, 38px); font-weight: 900; line-height: 1.2; margin-bottom: 10px; color: #fff; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
-    .slide-content p { color: #eee; font-size: 14px; margin-bottom: 20px; text-shadow: 1px 1px 5px rgba(0,0,0,0.8); }
-    .btn-watch-main { background: var(--accent); color: #fff; padding: 10px 25px; border: none; border-radius: 6px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; transition: 0.3s; }
-    .slider-dots { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 8px; z-index: 20; }
-    .dot { width: 10px; height: 10px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; transition: 0.3s; }
-    .dot.active { background: var(--accent); width: 25px; border-radius: 10px; }
+        /* --- CARDS --- */
+        .filter-container { padding: 30px 6% 0; display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
+        .filter-chip { padding: 10px 22px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 50px; cursor: pointer; font-weight: 600; white-space: nowrap; color: var(--text); transition: 0.3s; }
+        .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .container { padding: 20px 6% 100px; }
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
+        .movie-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .movie-card:hover { transform: translateY(-12px); border-color: var(--accent); box-shadow: 0 15px 35px var(--shadow); }
+        .movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
+        .card-info { padding: 12px; }
+        .card-genre { font-size: 10px; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .card-info h4 { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .quality-tag { background: var(--accent); color: #fff; font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; }
 
-    /* --- CARDS --- */
-    .filter-container { padding: 30px 6% 0; display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
-    .filter-chip { padding: 10px 22px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 50px; cursor: pointer; font-weight: 600; white-space: nowrap; color: var(--text); transition: 0.3s; }
-    .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .container { padding: 20px 6% 100px; }
-    .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
-    .movie-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
-    .movie-card:hover { transform: translateY(-12px); border-color: var(--accent); box-shadow: 0 15px 35px var(--shadow); }
-    .movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
-    .card-info { padding: 12px; }
-    .card-genre { font-size: 10px; color: var(--accent); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; display: block; }
-    .card-info h4 { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .quality-tag { background: var(--accent); color: #fff; font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; }
-
-    /* --- PLAYER (TRANSPARENT TOP BAR) --- */
-    .player-modal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; overflow: hidden; }
-     v-player { width: 100%; height: 100%; outline: none; border: none; }
-    .player-top-bar { position: absolute; top: 0; width: 100%; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 3100; background: transparent; }
-    .player-logo-text { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
-    .player-exit { font-size: 35px; color: #fff; cursor: pointer; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
-    .player-settings-group { position: absolute; bottom: 80px; right: 30px; z-index: 3100; display: flex; flex-direction: column; align-items: flex-end; }
-    .settings-btn { width: 45px; height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color:#fff; }
-    .settings-panel { background: #111; border: 1px solid #333; padding: 15px; border-radius: 10px; width: 200px; margin-bottom: 10px; display: none; }
-    .settings-panel.open { display: block; }
-    .setting-row select { width: 100%; background: #222; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 5px; margin-bottom: 10px; }
-</style>
+        /* --- PLAYER (TRANSPARENT TOP BAR) --- */
+        .player-modal { position: fixed; inset: 0; background: #000; display: none; z-index: 3000; overflow: hidden; }
+        video#v-player { width: 100%; height: 100%; outline: none; border: none; }
+        .player-top-bar { position: absolute; top: 0; width: 100%; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 3100; background: transparent; }
+        .player-logo-text { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
+        .player-exit { font-size: 35px; color: #fff; cursor: pointer; text-shadow: 2px 2px 10px rgba(0,0,0,0.8); }
+        .player-settings-group { position: absolute; bottom: 80px; right: 30px; z-index: 3100; display: flex; flex-direction: column; align-items: flex-end; }
+        .settings-btn { width: 45px; height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color:#fff; }
+        .settings-panel { background: #111; border: 1px solid #333; padding: 15px; border-radius: 10px; width: 200px; margin-bottom: 10px; display: none; }
+        .settings-panel.open { display: block; }
+        .setting-row select { width: 100%; background: #222; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 5px; margin-bottom: 10px; }
+    </style>
 </head>
 <body>
 
@@ -165,15 +166,11 @@
         <div class="settings-panel" id="settingsPanel">
             <div class="setting-row">
                 <label style="font-size:10px; color:#aaa;">AUDIO</label>
-                <select id="audioSel" onchange="changeAudio()">
-                    <option>Default Audio</option>
-                </select>
+                <select id="audioSel" onchange="changeAudio()"></select>
             </div>
             <div class="setting-row">
                 <label style="font-size:10px; color:#aaa;">QUALITY</label>
-                <select id="qualitySel" onchange="changeQuality()">
-                    <option>Auto Quality</option>
-                </select>
+                <select id="qualitySel" onchange="changeQuality()"></select>
             </div>
         </div>
         <div class="settings-btn" onclick="toggleSettings()"><i class="fa fa-cog"></i></div>
@@ -186,7 +183,7 @@
     AOS.init({ duration: 800 });
     let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
     let hls = null, shakaPlayer = null, slideInterval;
-    const JSON_URL = "https://corsproxy.io/https://api.npoint.io/6e064f3d3f22881accc7";
+    const JSON_URL = "https://api.npoint.io/6e064f3d3f22881accc7";
 
     async function fetchData() {
         try {
@@ -200,7 +197,7 @@
                     renderSlider(); renderFilters(); renderGrid(gridItems); startAutoSlide();
                 } else { renderGrid(gridItems); }
             }
-        } catch (e) { console.error("Realtime Error"); }
+        } catch (e) { console.error("Realtime Sync Error"); }
     }
 
     async function init() {
@@ -210,115 +207,70 @@
         setInterval(fetchData, 30000); 
     }
 
-async function openPlayer(url) {
-    if (!url) return;
-    const modal = document.getElementById('playerModal');
-    const video = document.getElementById('v-player');
-    modal.style.display = 'block';
+    // --- PLAYBACK LOGIC FIXED ---
+    async function openPlayer(url) {
+        if (!url) return;
+        const modal = document.getElementById('playerModal');
+        const video = document.getElementById('v-player');
+        modal.style.display = 'block';
 
-    // 1. Cleanup existing instances
-    if (window.hls) { window.hls.destroy(); window.hls = null; }
-    if (window.shakaPlayer) { await window.shakaPlayer.unload(); }
-    video.removeAttribute('src');
-    video.load();
+        const cleanUrl = url.split('|')[0].trim();
+        const lowUrl = cleanUrl.toLowerCase();
 
-    // 2. Reset UI selections
-    document.getElementById('qualitySel').innerHTML = '<option>Auto Quality</option>';
-    document.getElementById('audioSel').innerHTML = '<option>Default Audio</option>';
+        // 1. Full Reset before loading new stream
+        document.getElementById('qualitySel').innerHTML = '<option>Auto Quality</option>';
+        document.getElementById('audioSel').innerHTML = '<option>Default Audio</option>';
+        if (hls) { hls.destroy(); hls = null; }
+        if (shakaPlayer) { await shakaPlayer.unload(); }
+        video.src = "";
+        video.load();
 
-    // 3. Handle Pipe format and Proxying
-    const cleanUrl = url.split('|')[0].trim();
-    const lowUrl = cleanUrl.toLowerCase();
-    const proxiedMainUrl = PROXY + encodeURIComponent(cleanUrl);
-
-    try {
-        // --- CASE 1: MPD (DASH) using Shaka Player ---
-        if (lowUrl.includes('.mpd')) {
-            if (!window.shakaPlayer) window.shakaPlayer = new shaka.Player(video);
-            
-            // 🚀 SHAKA SEGMENT PROXY: Har tukde ko proxy se nikalna
-            window.shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
-                if (request.uris[0].indexOf(PROXY) === -1) {
-                    request.uris[0] = PROXY + encodeURIComponent(request.uris[0]);
-                }
-            });
-
-            await window.shakaPlayer.load(proxiedMainUrl);
-            setupShakaTracks();
-            video.play();
-        } 
-        
-        // --- CASE 2: M3U8, PHP, TS using Hls.js ---
-        else if (lowUrl.includes('.m3u8') || lowUrl.includes('.php') || lowUrl.includes('.ts') || lowUrl.includes('.m3u')) {
-            if (Hls.isSupported()) {
-                const hls = new Hls({
-                    // 🚀 HLS SEGMENT PROXY: Har .ts file ko proxy se mangwana
-                    xhrSetup: function(xhr, segmentUrl) {
-                        if (segmentUrl.indexOf(PROXY) === -1) {
-                            const newUrl = PROXY + encodeURIComponent(segmentUrl);
-                            xhr.open('GET', newUrl, true);
-                        }
-                    }
-                });
-                window.hls = hls;
-                hls.loadSource(proxiedMainUrl);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    setupHlsTracks();
-                    video.play();
-                });
+        try {
+            // CASE: MPD (DASH) -> Shaka
+            if (lowUrl.includes('.mpd')) {
+                if (!shakaPlayer) shakaPlayer = new shaka.Player(video);
+                await shakaPlayer.load(cleanUrl);
+                const tracks = shakaPlayer.getVariantTracks();
+                document.getElementById('qualitySel').innerHTML = tracks.map(t => `<option value="${t.id}">${t.height}p</option>`).join('');
+                video.play();
             } 
-            // Safari/iPhone fallback
-            else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = proxiedMainUrl;
+            // CASE: M3U8, PHP, TS -> Hls.js
+            else if (lowUrl.includes('.m3u8') || lowUrl.includes('.php') || lowUrl.includes('.ts') || lowUrl.includes('.m3u')) {
+                if (Hls.isSupported()) {
+                    hls = new Hls();
+                    hls.loadSource(cleanUrl);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                        const qSel = document.getElementById('qualitySel');
+                        qSel.innerHTML = '<option value="-1">Auto</option>' + hls.levels.map((l, i) => `<option value="${i}">${l.height}p</option>`).join('');
+                        video.play();
+                    });
+                    hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
+                        const aSel = document.getElementById('audioSel');
+                        aSel.innerHTML = hls.audioTracks.map((t, i) => `<option value="${i}">${t.name || t.lang}</option>`).join('');
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = cleanUrl;
+                    video.play();
+                }
+            } 
+            // CASE: Direct MP4
+            else {
+                video.src = cleanUrl;
                 video.play();
             }
-        } 
-        
-        // --- CASE 3: Standard MP4/Direct Play ---
-        else {
-            video.src = proxiedMainUrl;
-            video.play();
-        }
-
-    } catch (e) {
-        console.error("Playback failed:", e);
-        // Last fallback
-        video.src = proxiedMainUrl;
-        video.play();
+        } catch (e) { console.error("Engine Error", e); }
     }
-}
-    // --- Tracks Setup Functions ---
-function setupHlsTracks() {
-    const qSel = document.getElementById('qualitySel');
-    qSel.innerHTML = '<option value="-1">Auto Quality</option>' + window.hls.levels.map((lvl, i) => `<option value="${i}">${lvl.height}p</option>`).join('');
-    window.hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
-        const aSel = document.getElementById('audioSel');
-        const tracks = window.hls.audioTracks;
-        if (tracks.length > 0) {
-            aSel.innerHTML = tracks.map((t, i) => `<option value="${i}">${t.name || t.lang}</option>`).join('');
-        }
-    });
-}
 
-function setupShakaTracks() {
-    const qSel = document.getElementById('qualitySel');
-    const tracks = window.shakaPlayer.getVariantTracks();
-    qSel.innerHTML = tracks.map(t => `<option value="${t.id}">${t.height}p</option>`).join('');
-}
     function changeQuality() {
         const val = parseInt(document.getElementById('qualitySel').value);
-        if (hls) hls.currentLevel = val;
-        if (shakaPlayer) {
-            const track = shakaPlayer.getVariantTracks().find(t => t.id == val);
-            shakaPlayer.selectVariantTrack(track, true);
-        }
+        if(hls) hls.currentLevel = val;
+        if(shakaPlayer) shakaPlayer.selectVariantTrack(shakaPlayer.getVariantTracks().find(t => t.id == val), true);
     }
-
     function changeAudio() {
         const val = parseInt(document.getElementById('audioSel').value);
-        if (hls) hls.audioTrack = val;
-        if (shakaPlayer) shakaPlayer.selectAudioLanguage(document.getElementById('audioSel').value);
+        if(hls) hls.audioTrack = val;
+        if(shakaPlayer) shakaPlayer.selectAudioLanguage(document.getElementById('audioSel').value);
     }
 
     function closePlayer() {
@@ -326,12 +278,11 @@ function setupShakaTracks() {
         v.pause();
         if (hls) { hls.destroy(); hls = null; }
         if (shakaPlayer) shakaPlayer.unload();
-        v.removeAttribute('src'); v.load();
+        v.src = "";
         document.getElementById('playerModal').style.display = 'none';
-        document.getElementById('settingsPanel').classList.remove('open');
     }
 
-    // --- UI LOGIC ---
+    // --- UI HELPERS ---
     function renderSlider() {
         const wrapper = document.getElementById('sliderWrapper');
         const dots = document.getElementById('sliderDots');
@@ -350,64 +301,17 @@ function setupShakaTracks() {
             </div>`).join('');
         dots.innerHTML = heroItems.map((_, i) => `<div class="dot ${i===0?'active':''}" onclick="manualSlide(${i})"></div>`).join('');
     }
-    function manualSlide(index) { clearInterval(slideInterval); goToSlide(index); startAutoSlide(); }
-    function goToSlide(index) {
-        currentIndex = index;
-        document.getElementById('sliderWrapper').style.transform = `translateX(-${currentIndex * 100}%)`;
-        document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentIndex));
-        document.querySelectorAll('.slide').forEach((s, i) => s.classList.toggle('active', i === currentIndex));
-    }
+    function manualSlide(i) { clearInterval(slideInterval); goToSlide(i); startAutoSlide(); }
+    function goToSlide(i) { currentIndex = i; document.getElementById('sliderWrapper').style.transform = `translateX(-${i * 100}%)`; document.querySelectorAll('.dot').forEach((d, idx) => d.classList.toggle('active', idx === i)); document.querySelectorAll('.slide').forEach((s, idx) => s.classList.toggle('active', idx === i)); }
     function startAutoSlide() { slideInterval = setInterval(() => goToSlide((currentIndex + 1) % heroItems.length), 6000); }
-    function renderGrid(data) {
-        document.getElementById('movieGrid').innerHTML = data.map(m => `
-            <div class="movie-card" onclick="openPlayer('${m.url}')">
-                <img src="${m.logo}" loading="lazy">
-                <div class="card-info">
-                    <span class="card-genre">${m.cat || 'General'}</span>
-                    <h4>${m.name}</h4>
-                    <div class="quality-tag">${m.quality || 'WEB-HQ'}</div>
-                </div>
-            </div>`).join('');
-    }
-    function searchMovies() {
-        const term = document.getElementById('searchInput').value.toLowerCase();
-        renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(term)));
-        if(term.length > 0) document.getElementById('mainContainer').scrollIntoView({ behavior: 'smooth' });
-    }
-    function toggleTheme() {
-        const html = document.documentElement;
-        const nextTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        html.setAttribute('data-theme', nextTheme);
-        document.getElementById('themeBtn').innerHTML = nextTheme === 'dark' ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>';
-    }
+    function renderGrid(d) { document.getElementById('movieGrid').innerHTML = d.map(m => `<div class="movie-card" onclick="openPlayer('${m.url}')"><img src="${m.logo}" loading="lazy"><div class="card-info"><span class="card-genre">${m.cat || 'General'}</span><h4>${m.name}</h4><div class="quality-tag">${m.quality || 'WEB-HQ'}</div></div></div>`).join(''); }
+    function searchMovies() { renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(document.getElementById('searchInput').value.toLowerCase()))); }
+    function toggleTheme() { const h = document.documentElement; const n = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; h.setAttribute('data-theme', n); document.getElementById('themeBtn').innerHTML = n === 'dark' ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>'; }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-    function renderFilters() {
-        const wrapper = document.getElementById('filterWrapper');
-        const cats = [...new Set(gridItems.map(m => m.cat))];
-        cats.forEach(c => wrapper.innerHTML += `<div class="filter-chip" onclick="filterData('${c}', this)">${c}</div>`);
-    }
-    function filterData(cat, el) {
-        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        renderGrid(cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat));
-        const container = document.getElementById('mainContainer');
-        if(container) {
-            const navbarHeight = 80;
-            const targetPosition = container.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
-            window.scrollTo({ top: targetPosition, behavior: 'smooth' });
-        }
-    }
-    function initSwipe() {
-        const slider = document.getElementById('sliderContainer');
-        let touchStartX = 0, touchEndX = 0;
-        slider.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
-        slider.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
-            if (touchStartX - touchEndX > 50) manualSlide((currentIndex + 1) % heroItems.length);
-            else if (touchEndX - touchStartX > 50) manualSlide((currentIndex - 1 + heroItems.length) % heroItems.length);
-        }, {passive: true});
-    }
     function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
+    function renderFilters() { const w = document.getElementById('filterWrapper'); [...new Set(gridItems.map(m => m.cat))].forEach(c => w.innerHTML += `<div class="filter-chip" onclick="filterData('${c}', this)">${c}</div>`); }
+    function filterData(cat, el) { document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); renderGrid(cat === 'All' ? gridItems : gridItems.filter(m => m.cat === cat)); const mc = document.getElementById('mainContainer'); if(mc) window.scrollTo({ top: mc.offsetTop - 80, behavior: 'smooth' }); }
+    function initSwipe() { const s = document.getElementById('sliderContainer'); let x = 0; s.addEventListener('touchstart', e => x = e.changedTouches[0].screenX, {passive: true}); s.addEventListener('touchend', e => { let d = x - e.changedTouches[0].screenX; if (Math.abs(d) > 50) manualSlide((currentIndex + (d > 0 ? 1 : -1) + heroItems.length) % heroItems.length); }, {passive: true}); }
 
     init();
 </script>
