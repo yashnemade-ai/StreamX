@@ -212,73 +212,104 @@ Code
         setInterval(fetchData, 30000); 
     }
 
-    // --- UPDATED PLAYBACK ENGINE ---
-    async function openPlayer(url) {
-        if (!url) return;
-        const modal = document.getElementById('playerModal');
-        const video = document.getElementById('v-player');
-        modal.style.display = 'block';
+    const PROXY = "https://corsproxy.io/?";
 
-        // Handles both plain URLs and URLs with pipe headers
-        const cleanUrl = url.split('|')[0].trim();
-        const lowUrl = cleanUrl.toLowerCase();
+async function openPlayer(url) {
+    if (!url) return;
+    const modal = document.getElementById('playerModal');
+    const video = document.getElementById('v-player');
+    modal.style.display = 'block';
 
-        // Reset UI selections
-        document.getElementById('qualitySel').innerHTML = '<option>Auto Quality</option>';
-        document.getElementById('audioSel').innerHTML = '<option>Default Audio</option>';
+    // 1. Cleanup existing instances
+    if (window.hls) { window.hls.destroy(); window.hls = null; }
+    if (window.shakaPlayer) { await window.shakaPlayer.unload(); }
+    video.removeAttribute('src');
+    video.load();
 
-        // 1. Cleanup existing instances
-        if (hls) { hls.destroy(); hls = null; }
-        if (shakaPlayer) { await shakaPlayer.unload(); }
-        video.src = "";
+    // 2. Reset UI selections
+    document.getElementById('qualitySel').innerHTML = '<option>Auto Quality</option>';
+    document.getElementById('audioSel').innerHTML = '<option>Default Audio</option>';
 
-        try {
-            // CASE: MPD (DASH) -> Shaka
-            if (lowUrl.includes('.mpd')) {
-                if (!shakaPlayer) shakaPlayer = new shaka.Player(video);
-                await shakaPlayer.load(cleanUrl);
-                setupShakaTracks();
-            } 
-            // CASE: M3U8, PHP, TS -> Hls.js
-            else if (lowUrl.includes('.m3u8') || lowUrl.includes('.php') || lowUrl.includes('.ts') || lowUrl.includes('.m3u')) {
-                if (Hls.isSupported()) {
-                    hls = new Hls();
-                    hls.loadSource(cleanUrl);
-                    hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        setupHlsTracks();
-                        video.play();
-                    });
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = cleanUrl;
-                    video.play();
+    // 3. Handle Pipe format and Proxying
+    const cleanUrl = url.split('|')[0].trim();
+    const lowUrl = cleanUrl.toLowerCase();
+    const proxiedMainUrl = PROXY + encodeURIComponent(cleanUrl);
+
+    try {
+        // --- CASE 1: MPD (DASH) using Shaka Player ---
+        if (lowUrl.includes('.mpd')) {
+            if (!window.shakaPlayer) window.shakaPlayer = new shaka.Player(video);
+            
+            // 🚀 SHAKA SEGMENT PROXY: Har tukde ko proxy se nikalna
+            window.shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
+                if (request.uris[0].indexOf(PROXY) === -1) {
+                    request.uris[0] = PROXY + encodeURIComponent(request.uris[0]);
                 }
+            });
+
+            await window.shakaPlayer.load(proxiedMainUrl);
+            setupShakaTracks();
+            video.play();
+        } 
+        
+        // --- CASE 2: M3U8, PHP, TS using Hls.js ---
+        else if (lowUrl.includes('.m3u8') || lowUrl.includes('.php') || lowUrl.includes('.ts') || lowUrl.includes('.m3u')) {
+            if (Hls.isSupported()) {
+                const hls = new Hls({
+                    // 🚀 HLS SEGMENT PROXY: Har .ts file ko proxy se mangwana
+                    xhrSetup: function(xhr, segmentUrl) {
+                        if (segmentUrl.indexOf(PROXY) === -1) {
+                            const newUrl = PROXY + encodeURIComponent(segmentUrl);
+                            xhr.open('GET', newUrl, true);
+                        }
+                    }
+                });
+                window.hls = hls;
+                hls.loadSource(proxiedMainUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    setupHlsTracks();
+                    video.play();
+                });
             } 
-            // CASE: Standard MP4/Direct
-            else {
-                video.src = cleanUrl;
+            // Safari/iPhone fallback
+            else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = proxiedMainUrl;
                 video.play();
             }
-        } catch (e) {
-            console.error("Playback failed:", e);
+        } 
+        
+        // --- CASE 3: Standard MP4/Direct Play ---
+        else {
+            video.src = proxiedMainUrl;
+            video.play();
         }
-    }
 
-    function setupHlsTracks() {
-        const qSel = document.getElementById('qualitySel');
-        qSel.innerHTML = '<option value="-1">Auto</option>' + hls.levels.map((lvl, i) => `<option value="${i}">${lvl.height}p</option>`).join('');
-        hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
-            const aSel = document.getElementById('audioSel');
-            aSel.innerHTML = hls.audioTracks.map((t, i) => `<option value="${i}">${t.name || t.lang}</option>`).join('') || '<option>Default Audio</option>';
-        });
+    } catch (e) {
+        console.error("Playback failed:", e);
+        // Last fallback
+        video.src = proxiedMainUrl;
+        video.play();
     }
+}
+    // --- Tracks Setup Functions ---
+function setupHlsTracks() {
+    const qSel = document.getElementById('qualitySel');
+    qSel.innerHTML = '<option value="-1">Auto Quality</option>' + window.hls.levels.map((lvl, i) => `<option value="${i}">${lvl.height}p</option>`).join('');
+    window.hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
+        const aSel = document.getElementById('audioSel');
+        const tracks = window.hls.audioTracks;
+        if (tracks.length > 0) {
+            aSel.innerHTML = tracks.map((t, i) => `<option value="${i}">${t.name || t.lang}</option>`).join('');
+        }
+    });
+}
 
-    function setupShakaTracks() {
-        const qSel = document.getElementById('qualitySel');
-        const tracks = shakaPlayer.getVariantTracks();
-        qSel.innerHTML = tracks.map(t => `<option value="${t.id}">${t.height}p</option>`).join('');
-    }
-
+function setupShakaTracks() {
+    const qSel = document.getElementById('qualitySel');
+    const tracks = window.shakaPlayer.getVariantTracks();
+    qSel.innerHTML = tracks.map(t => `<option value="${t.id}">${t.height}p</option>`).join('');
+}
     function changeQuality() {
         const val = parseInt(document.getElementById('qualitySel').value);
         if (hls) hls.currentLevel = val;
