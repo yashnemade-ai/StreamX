@@ -7,47 +7,60 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "StreamX Proxy Active"
+    return "StreamX Proxy is Live", 200
 
 @app.route('/proxy')
 def proxy():
-    target_url = request.args.get('url')
-    if not target_url:
-        return "URL missing", 400
+    url = request.args.get('url')
+    if not url:
+        return "URL Missing", 400
 
-    # Clean the URL
-    if "|" in target_url:
-        parts = target_url.split("|")
-        target_url = parts[0]
-        # Baki headers aapka extension handle kar lega
-    
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Referer": "https://www.hotstar.com/",
-        "Origin": "https://www.hotstar.com"
+    # 1. Parse URL and Headers
+    target_url = url
+    custom_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     }
 
-    # Video Seeking ke liye Range header copy karna ZAROORI hai
+    if "|" in url:
+        parts = url.split("|")
+        target_url = parts[0]
+        if len(parts) > 1:
+            params = parts[1].split("&")
+            for p in params:
+                if "=" in p:
+                    k, v = p.split("=", 1)
+                    custom_headers[k.strip()] = v.strip()
+
+    # 2. Add Cricbuzz/Hotstar specific headers if detected
+    if "cricbuzz" in target_url or "akamaihd" in target_url:
+        custom_headers["Referer"] = "https://www.cricbuzz.com/"
+        custom_headers["Origin"] = "https://www.cricbuzz.com"
+
     if "Range" in request.headers:
-        headers["Range"] = request.headers["Range"]
+        custom_headers["Range"] = request.headers["Range"]
 
     try:
-        # Stream=True use karke memory bachate hain
-        r = requests.get(target_url, headers=headers, stream=True, timeout=10, verify=False)
+        # 3. Fetch data with stream=True
+        r = requests.get(target_url, headers=custom_headers, stream=True, timeout=15, verify=False)
         
         def generate():
-            for chunk in r.iter_content(chunk_size=128*1024): # 128KB chunks for speed
+            for chunk in r.iter_content(chunk_size=1024*128): # Small chunks to prevent crash
                 yield chunk
 
-        # Response headers build karein
-        excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-        resp_headers = [(name, value) for (name, value) in r.raw.headers.items()
-                        if name.lower() not in excluded_headers]
+        # Build Response
+        resp = Response(stream_with_context(generate()), status=r.status_code)
         
-        # Add CORS
-        resp_headers.append(('Access-Control-Allow-Origin', '*'))
-
-        return Response(stream_with_context(generate()), status=r.status_code, headers=resp_headers)
+        # 4. Critical CORS Headers
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        resp.headers['Access-Control-Allow-Headers'] = '*'
+        
+        if 'Content-Type' in r.headers:
+            resp.headers['Content-Type'] = r.headers['Content-Type']
+        if 'Content-Range' in r.headers:
+            resp.headers['Content-Range'] = r.headers['Content-Range']
+            
+        return resp
 
     except Exception as e:
         return str(e), 500
