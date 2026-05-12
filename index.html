@@ -378,6 +378,18 @@
     function initSwipe() { const s = document.getElementById('sliderContainer'); let x = 0; s.addEventListener('touchstart', e => x = e.changedTouches[0].screenX, {passive: true}); s.addEventListener('touchend', e => { let d = x - e.changedTouches[0].screenX; if (Math.abs(d) > 50) manualSlide((currentIndex + (d > 0 ? 1 : -1) + heroItems.length) % heroItems.length); }, {passive: true}); }
 
     init();
+    // PC Keyboard Navigation for Banner (Left/Right Keys)
+    document.addEventListener('keydown', (e) => {
+        if (!heroItems || heroItems.length === 0) return;
+
+        if (e.key === 'ArrowRight') {
+            let nextIndex = (currentIndex + 1) % heroItems.length;
+            manualSlide(nextIndex);
+        } else if (e.key === 'ArrowLeft') {
+            let prevIndex = (currentIndex - 1 + heroItems.length) % heroItems.length;
+            manualSlide(prevIndex);
+        }
+    });
      document.addEventListener('contextmenu', event => event.preventDefault());
 
     // 2. Keyboard Shortcuts Block karne ke liye (F12, Ctrl+Shift+I, Ctrl+U, etc.)
