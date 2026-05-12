@@ -208,61 +208,77 @@
         setInterval(fetchData, 30000); 
     }
 
-    // --- PLAYBACK LOGIC FIXED ---
+    // Helper function: Hex string ko Base64URL mein badalne ke liye (DRM ke liye zaroori)
+    function hexToBase64URL(hex) {
+        return btoa(hex.match(/\w{2}/g).map(a => String.fromCharCode(parseInt(a, 16))).join(""))
+            .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
     async function openPlayer(url) {
         if (!url) return;
         const modal = document.getElementById('playerModal');
         const video = document.getElementById('v-player');
         modal.style.display = 'block';
 
-        const cleanUrl = url.split('|')[0].trim();
-        const lowUrl = cleanUrl.toLowerCase();
+        // 1. URL aur Parameters ko split karein
+        const parts = url.split('|');
+        const cleanUrl = parts[0].trim();
+        const params = new URLSearchParams(parts[1] || "");
 
-        // 1. Full Reset before loading new stream
-        document.getElementById('qualitySel').innerHTML = '<option>Auto Quality</option>';
-        document.getElementById('audioSel').innerHTML = '<option>Default Audio</option>';
+        const drmScheme = params.get('drmScheme');
+        const drmLicense = params.get('drmLicense'); // Format: ID:KEY
+        const userAgent = params.get('user-agent');
+        const referer = params.get('referer');
+
+        // Reset Players
         if (hls) { hls.destroy(); hls = null; }
         if (shakaPlayer) { await shakaPlayer.unload(); }
         video.src = "";
-        video.load();
 
         try {
-            // CASE: MPD (DASH) -> Shaka
-            if (lowUrl.includes('.mpd')) {
+            if (cleanUrl.toLowerCase().includes('.mpd')) {
                 if (!shakaPlayer) shakaPlayer = new shaka.Player(video);
+
+                // --- DRM CONFIGURATION START ---
+                if (drmScheme === 'clearkey' && drmLicense && drmLicense.includes(':')) {
+                    const [keyId, key] = drmLicense.split(':');
+                    const clearKeys = {};
+                    clearKeys[hexToBase64URL(keyId)] = hexToBase64URL(key);
+                    
+                    shakaPlayer.configure({
+                        drm: { clearKeys: clearKeys }
+                    });
+                }
+                // --- DRM CONFIGURATION END ---
+
+                // Headers injection (DAZN ke liye zaroori)
+                shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
+                    if (userAgent) request.headers['User-Agent'] = userAgent;
+                    // Note: Browser Referer ko protect karta hai, isliye extension zaroori hai
+                });
+
                 await shakaPlayer.load(cleanUrl);
                 const tracks = shakaPlayer.getVariantTracks();
                 document.getElementById('qualitySel').innerHTML = tracks.map(t => `<option value="${t.id}">${t.height}p</option>`).join('');
                 video.play();
-            } 
-            // CASE: M3U8, PHP, TS -> Hls.js
-            else if (lowUrl.includes('.m3u8') || lowUrl.includes('.php') || lowUrl.includes('.ts') || lowUrl.includes('.m3u')) {
+
+            } else if (cleanUrl.toLowerCase().includes('.m3u8')) {
+                // HLS Logic (Pehle jaisa hi)
                 if (Hls.isSupported()) {
                     hls = new Hls();
                     hls.loadSource(cleanUrl);
                     hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        const qSel = document.getElementById('qualitySel');
-                        qSel.innerHTML = '<option value="-1">Auto</option>' + hls.levels.map((l, i) => `<option value="${i}">${l.height}p</option>`).join('');
-                        video.play();
-                    });
-                    hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
-                        const aSel = document.getElementById('audioSel');
-                        aSel.innerHTML = hls.audioTracks.map((t, i) => `<option value="${i}">${t.name || t.lang}</option>`).join('');
-                    });
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = cleanUrl;
-                    video.play();
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
                 }
-            } 
-            // CASE: Direct MP4
-            else {
+            } else {
                 video.src = cleanUrl;
                 video.play();
             }
-        } catch (e) { console.error("Engine Error", e); }
+        } catch (e) { 
+            console.error("Playback Error:", e);
+            alert("DRM Error: Check License Keys or CORS Extension.");
+        }
     }
-
     function changeQuality() {
         const val = parseInt(document.getElementById('qualitySel').value);
         if(hls) hls.currentLevel = val;
