@@ -208,10 +208,13 @@
         setInterval(fetchData, 30000); 
     }
 
-    // Helper function: Hex string ko Base64URL mein badalne ke liye (DRM ke liye zaroori)
+    // Helper function: Hex string ko Base64URL mein badalne ke liye
     function hexToBase64URL(hex) {
-        return btoa(hex.match(/\w{2}/g).map(a => String.fromCharCode(parseInt(a, 16))).join(""))
-            .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        if (!hex || hex.includes('-') || hex.includes('http')) return hex;
+        try {
+            return btoa(hex.match(/\w{2}/g).map(a => String.fromCharCode(parseInt(a, 16))).join(""))
+                .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        } catch(e) { return hex; }
     }
 
     async function openPlayer(url) {
@@ -220,62 +223,107 @@
         const video = document.getElementById('v-player');
         modal.style.display = 'block';
 
-        // 1. URL aur Parameters ko split karein
-        const parts = url.split('|');
-        const cleanUrl = parts[0].trim();
-        const params = new URLSearchParams(parts[1] || "");
+        // 1. URL aur Parameters parsing (Handling %7C and |)
+        const cleanRawUrl = url.replace(/%7C/gi, "|").replace(/%7c/gi, "|");
+        const parts = cleanRawUrl.split('|');
+        const streamUrl = parts[0].trim();
+        
+        // Agar parts[1] hai toh parameters nikalein
+        const paramsString = parts[1] ? parts[1].replace(/^\?/, "") : "";
+        const params = new URLSearchParams(paramsString);
+        
+        // Case-insensitive mapping for headers
+        const headerMap = {};
+        for (let [k, v] of params.entries()) {
+            headerMap[k.toLowerCase()] = v;
+        }
 
-        const drmScheme = params.get('drmScheme');
-        const drmLicense = params.get('drmLicense'); // Format: ID:KEY
-        const userAgent = params.get('user-agent');
-        const referer = params.get('referer');
+        const drmLicense = headerMap['drmlicense'] || headerMap['license'];
+        const userAgent = headerMap['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
+        const referer = headerMap['referer'] || headerMap['origin'] || 'https://www.google.com/';
+        const cookie = headerMap['cookie'];
 
-        // Reset Players
+        // 2. HARD RESET: Purane players ko destroy karein (Fixes "Broken Link" on first try)
         if (hls) { hls.destroy(); hls = null; }
-        if (shakaPlayer) { await shakaPlayer.unload(); }
+        if (shakaPlayer) { 
+            await shakaPlayer.destroy(); 
+            shakaPlayer = null; 
+        }
         video.src = "";
+        video.load(); 
 
         try {
-            if (cleanUrl.toLowerCase().includes('.mpd')) {
+            // --- DASH (.mpd) Logic ---
+            if (streamUrl.toLowerCase().includes('.mpd')) {
                 if (!shakaPlayer) shakaPlayer = new shaka.Player(video);
 
-                // --- DRM CONFIGURATION START ---
-                if (drmScheme === 'clearkey' && drmLicense && drmLicense.includes(':')) {
-                    const [keyId, key] = drmLicense.split(':');
-                    const clearKeys = {};
-                    clearKeys[hexToBase64URL(keyId)] = hexToBase64URL(key);
-                    
-                    shakaPlayer.configure({
-                        drm: { clearKeys: clearKeys }
-                    });
+                let drmConfig = {};
+                if (drmLicense) {
+                    if (drmLicense.startsWith('http')) {
+                        // CASE: License URL (Tata Play / Jio Workers)
+                        drmConfig = { servers: { 'org.w3.clearkey': drmLicense } };
+                    } else if (drmLicense.includes(':')) {
+                        // CASE: Hex Keys (ID:KEY)
+                        const [keyId, key] = drmLicense.split(':');
+                        const clearKeys = {};
+                        clearKeys[hexToBase64URL(keyId)] = hexToBase64URL(key);
+                        drmConfig = { clearKeys: clearKeys };
+                    }
                 }
-                // --- DRM CONFIGURATION END ---
 
-                // Headers injection (DAZN ke liye zaroori)
-                shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
-                    if (userAgent) request.headers['User-Agent'] = userAgent;
-                    // Note: Browser Referer ko protect karta hai, isliye extension zaroori hai
+                shakaPlayer.configure({ 
+                    drm: drmConfig,
+                    manifest: { dash: { ignoreMinBufferTime: true } },
+                    streaming: { jumpLargeGaps: true }
                 });
 
-                await shakaPlayer.load(cleanUrl);
+                // Headers Injection (For Akamai/Jio/TP)
+                shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
+                    request.headers['User-Agent'] = userAgent;
+                    request.headers['Referer'] = referer;
+                    if (cookie) request.headers['Cookie'] = cookie;
+                    
+                    // GET method fix for PHP license servers
+                    if (type == shaka.net.NetworkingEngine.RequestType.LICENSE && drmLicense && drmLicense.includes('.php')) {
+                        request.method = 'GET';
+                    }
+                    // Akamai token credential fix
+                    if (streamUrl.includes('akamaized.net')) {
+                        request.allowCrossSiteCredentials = true;
+                    }
+                });
+
+                await shakaPlayer.load(streamUrl);
                 const tracks = shakaPlayer.getVariantTracks();
                 document.getElementById('qualitySel').innerHTML = tracks.map(t => `<option value="${t.id}">${t.height}p</option>`).join('');
                 video.play();
 
-            } else if (cleanUrl.toLowerCase().includes('.m3u8')) {
-                // HLS Logic (Pehle jaisa hi)
+            } 
+            // --- HLS (.m3u8) Logic ---
+            else if (streamUrl.toLowerCase().includes('.m3u8')) {
                 if (Hls.isSupported()) {
-                    hls = new Hls();
-                    hls.loadSource(cleanUrl);
+                    hls = new Hls({
+                        xhrSetup: function(xhr) {
+                            xhr.setRequestHeader('User-Agent', userAgent);
+                            if (cookie) xhr.setRequestHeader('Cookie', cookie);
+                        }
+                    });
+                    hls.loadSource(streamUrl);
                     hls.attachMedia(video);
                     hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+                } else {
+                    video.src = streamUrl;
+                    video.play();
                 }
             } else {
-                video.src = cleanUrl;
+                video.src = streamUrl;
                 video.play();
             }
         } catch (e) { 
             console.error("Playback Error:", e);
+            // Fallback for simple direct links
+            video.src = streamUrl;
+            video.play();
         }
     }
     function changeQuality() {
