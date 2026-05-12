@@ -330,11 +330,18 @@
         const val = parseInt(document.getElementById('qualitySel').value);
         if(hls) hls.currentLevel = val;
         if(shakaPlayer) shakaPlayer.selectVariantTrack(shakaPlayer.getVariantTracks().find(t => t.id == val), true);
+        
+        // Quality select hone ke baad settings panel band kar do
+        document.getElementById('settingsPanel').classList.remove('open');
     }
+
     function changeAudio() {
-        const val = parseInt(document.getElementById('audioSel').value);
-        if(hls) hls.audioTrack = val;
-        if(shakaPlayer) shakaPlayer.selectAudioLanguage(document.getElementById('audioSel').value);
+        const val = document.getElementById('audioSel').value;
+        if(hls) hls.audioTrack = parseInt(val);
+        if(shakaPlayer) shakaPlayer.selectAudioLanguage(val);
+        
+        // Audio select hone ke baad settings panel band kar do
+        document.getElementById('settingsPanel').classList.remove('open');
     }
 
     function closePlayer() {
