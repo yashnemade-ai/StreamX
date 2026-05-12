@@ -314,6 +314,47 @@
     function initSwipe() { const s = document.getElementById('sliderContainer'); let x = 0; s.addEventListener('touchstart', e => x = e.changedTouches[0].screenX, {passive: true}); s.addEventListener('touchend', e => { let d = x - e.changedTouches[0].screenX; if (Math.abs(d) > 50) manualSlide((currentIndex + (d > 0 ? 1 : -1) + heroItems.length) % heroItems.length); }, {passive: true}); }
 
     init();
+     document.addEventListener('contextmenu', event => event.preventDefault());
+
+    // 2. Keyboard Shortcuts Block karne ke liye (F12, Ctrl+Shift+I, Ctrl+U, etc.)
+    document.onkeydown = function(e) {
+        // F12 block
+        if (e.keyCode == 123) return false;
+
+        // Ctrl+Shift+I (Inspect), Ctrl+Shift+J (Console), Ctrl+Shift+C (Elements)
+        if (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) return false;
+
+        // Ctrl+U (View Source)
+        if (e.ctrlKey && e.keyCode == 85) return false;
+
+        // Ctrl+S (Save Page)
+        if (e.ctrlKey && e.keyCode == 83) return false;
+    };
+
+    // 3. Debugger Trap (Agar koi console khol leta hai, toh site pause ho jayegi)
+    (function() {
+        var devtools = function() {};
+        devtools.toString = function() {
+            this.opened = true;
+        };
+        
+        setInterval(function() {
+            const start = new Date();
+            debugger; // Yeh line site ko pause kar degi agar console open hua
+            const end = new Date();
+            if (end - start > 100) {
+                // Agar debugger ne time liya (matlab console open hai)
+                document.body.innerHTML = '<h1 style="color:white; text-align:center; margin-top:20%;">SECURITY ERROR: Inspect Element is Disabled!</h1>';
+            }
+        }, 500);
+    })();
+
+    // 4. Console ko spam/clear karna taaki logs na dikhe
+    setInterval(() => {
+        console.clear();
+        console.log("%cSTOP!", "color:red; font-size:40px; font-weight:bold;-webkit-text-stroke:1px black;");
+        console.log("%cAapka Kimti Waqt Barbaad Karne k liye Dhanyawaad!", "color:gray; font-size:18px;");
+    }, 1000);
 </script>
 </body>
 </html>
