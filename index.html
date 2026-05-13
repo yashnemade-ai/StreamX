@@ -217,7 +217,7 @@
         } catch(e) { return hex; }
     }
 
-    async function openPlayer(url) {
+async function openPlayer(url) {
         if (!url) return;
         const modal = document.getElementById('playerModal');
         const video = document.getElementById('v-player');
@@ -227,8 +227,6 @@
         const cleanRawUrl = url.replace(/%7C/gi, "|").replace(/%7c/gi, "|");
         const parts = cleanRawUrl.split('|');
         const streamUrl = parts[0].trim();
-        
-        // Agar parts[1] hai toh parameters nikalein
         const paramsString = parts[1] ? parts[1].replace(/^\?/, "") : "";
         const params = new URLSearchParams(paramsString);
         
@@ -240,91 +238,74 @@
 
         const drmLicense = headerMap['drmlicense'] || headerMap['license'];
         const userAgent = headerMap['user-agent'] || 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
-        const referer = headerMap['referer'] || headerMap['origin'] || 'https://www.google.com/';
+        const referer = headerMap['referer'] || 'https://www.hotstar.com/';
+        const origin = headerMap['origin'] || 'https://www.hotstar.com';
         const cookie = headerMap['cookie'];
 
-        // 2. HARD RESET: Purane players ko destroy karein (Fixes "Broken Link" on first try)
+        // 2. Player Reset
         if (hls) { hls.destroy(); hls = null; }
-        if (shakaPlayer) { 
-            await shakaPlayer.destroy(); 
-            shakaPlayer = null; 
-        }
-        video.src = "";
-        video.load(); 
+        if (shakaPlayer) { await shakaPlayer.destroy(); shakaPlayer = null; }
+        video.src = ""; video.load();
+        document.getElementById('qualitySel').innerHTML = '<option>Auto</option>';
 
         try {
-            // --- DASH (.mpd) Logic ---
-            if (streamUrl.toLowerCase().includes('.mpd')) {
-                if (!shakaPlayer) shakaPlayer = new shaka.Player(video);
-
+            // --- DASH Logic (.mpd) ---
+            if (streamUrl.includes('.mpd')) {
+                shakaPlayer = new shaka.Player(video);
                 let drmConfig = {};
                 if (drmLicense) {
                     if (drmLicense.startsWith('http')) {
-                        // CASE: License URL (Tata Play / Jio Workers)
                         drmConfig = { servers: { 'org.w3.clearkey': drmLicense } };
                     } else if (drmLicense.includes(':')) {
-                        // CASE: Hex Keys (ID:KEY)
                         const [keyId, key] = drmLicense.split(':');
                         const clearKeys = {};
                         clearKeys[hexToBase64URL(keyId)] = hexToBase64URL(key);
                         drmConfig = { clearKeys: clearKeys };
                     }
                 }
-
-                shakaPlayer.configure({ 
-                    drm: drmConfig,
-                    manifest: { dash: { ignoreMinBufferTime: true } },
-                    streaming: { jumpLargeGaps: true }
-                });
-
-                // Headers Injection (For Akamai/Jio/TP)
+                shakaPlayer.configure({ drm: drmConfig, manifest: { dash: { ignoreMinBufferTime: true } } });
                 shakaPlayer.getNetworkingEngine().registerRequestFilter((type, request) => {
                     request.headers['User-Agent'] = userAgent;
                     request.headers['Referer'] = referer;
+                    request.headers['Origin'] = origin;
                     if (cookie) request.headers['Cookie'] = cookie;
-                    
-                    // GET method fix for PHP license servers
                     if (type == shaka.net.NetworkingEngine.RequestType.LICENSE && drmLicense && drmLicense.includes('.php')) {
                         request.method = 'GET';
                     }
-                    // Akamai token credential fix
-                    if (streamUrl.includes('akamaized.net')) {
-                        request.allowCrossSiteCredentials = true;
-                    }
                 });
-
                 await shakaPlayer.load(streamUrl);
                 const tracks = shakaPlayer.getVariantTracks();
                 document.getElementById('qualitySel').innerHTML = tracks.map(t => `<option value="${t.id}">${t.height}p</option>`).join('');
                 video.play();
-
             } 
-            // --- HLS (.m3u8) Logic ---
-            else if (streamUrl.toLowerCase().includes('.m3u8')) {
+            // --- HLS Logic (.m3u8) - FIXED FOR HOTSTAR ---
+            else if (streamUrl.includes('.m3u8')) {
                 if (Hls.isSupported()) {
                     hls = new Hls({
-                        xhrSetup: function(xhr) {
+                        xhrSetup: function(xhr, url) {
+                            // Har segment request mein headers inject karein
                             xhr.setRequestHeader('User-Agent', userAgent);
-                            if (cookie) xhr.setRequestHeader('Cookie', cookie);
+                            xhr.setRequestHeader('Referer', referer);
+                            xhr.setRequestHeader('Origin', origin);
+                            if (cookie) {
+                                xhr.setRequestHeader('Cookie', cookie);
+                            }
                         }
                     });
                     hls.loadSource(streamUrl);
                     hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                        const qSel = document.getElementById('qualitySel');
+                        qSel.innerHTML = '<option value="-1">Auto</option>' + 
+                            hls.levels.map((l, i) => `<option value="${i}">${l.height}p</option>`).join('');
+                        video.play();
+                    });
                 } else {
                     video.src = streamUrl;
                     video.play();
                 }
-            } else {
-                video.src = streamUrl;
-                video.play();
             }
-        } catch (e) { 
-            console.error("Playback Error:", e);
-            // Fallback for simple direct links
-            video.src = streamUrl;
-            video.play();
-        }
+        } catch (e) { console.error("Playback Error:", e); }
     }
     function changeQuality() {
         const val = parseInt(document.getElementById('qualitySel').value);
