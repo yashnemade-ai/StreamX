@@ -360,13 +360,6 @@ function resetSettingsTimer() {
     }
 }
 
-// 2. Gear icon click function
-function toggleSettings() {
-    const panel = document.getElementById('settingsPanel');
-    panel.classList.toggle('open');
-    resetSettingsTimer();
-}
-
 // 3. Quality aur Audio change functions mein timer reset
 function changeQuality() {
     const val = parseInt(document.getElementById('qualitySel').value);
