@@ -307,6 +307,34 @@ async function openPlayer(url) {
             }
         } catch (e) { console.error("Playback Error:", e); }
     }
+    
+    // PC Keyboard Shortcuts for Player
+document.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('playerModal');
+    const video = document.getElementById('v-player');
+
+    // Agar player modal khula hai tabhi shortcut kaam karein
+    if (modal.style.display === 'block') {
+        
+        // 1. Press 'F' to Toggle Fullscreen
+        if (e.key.toLowerCase() === 'f') {
+            if (!document.fullscreenElement) {
+                // Modal ko full screen karna taaki custom buttons bhi dikhen
+                modal.requestFullscreen().catch(err => {
+                    console.log("Fullscreen Error:", err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // 2. Press 'Esc' to Close Player (Extra safety)
+        if (e.key === 'Escape' && !document.fullscreenElement) {
+            closePlayer();
+        }
+    }
+});
+
     function changeQuality() {
         const val = parseInt(document.getElementById('qualitySel').value);
         if(hls) hls.currentLevel = val;
