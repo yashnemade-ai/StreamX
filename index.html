@@ -27,7 +27,7 @@
         [data-theme="light"] {
             --bg: #f5f5f7; --nav-bg: #ffffff; --card-bg: #ffffff;
             --text: #1d1d1f; --text-dim: #6e6e73; --accent: #E50914;
-            --border: #d2d2d7; --shadow: rgba(0, 0, 0, 0.1);
+            --border: #d2d2d7; --shadow: rgba(0, 0, 0, 0.1);f
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
@@ -308,55 +308,82 @@ async function openPlayer(url) {
         } catch (e) { console.error("Playback Error:", e); }
     }
     
-// PC Keyboard Shortcuts
+    // PC Keyboard Shortcuts for Player
 document.addEventListener('keydown', (e) => {
     const modal = document.getElementById('playerModal');
     const video = document.getElementById('v-player');
 
-    // Check karein ki player modal open hai ya nahi
+    // Agar player modal khula hai tabhi shortcut kaam karein
     if (modal.style.display === 'block') {
         
-        // 'F' key dabane par sirf video fullscreen hoga
+        // 1. Press 'F' to Toggle Fullscreen
         if (e.key.toLowerCase() === 'f') {
             if (!document.fullscreenElement) {
-                // Video element ko target kiya hai taaki logo/settings na dikhe
-                if (video.requestFullscreen) {
-                    video.requestFullscreen();
-                } else if (video.webkitRequestFullscreen) { /* Safari */
-                    video.webkitRequestFullscreen();
-                } else if (video.msRequestFullscreen) { /* IE11 */
-                    video.msRequestFullscreen();
-                }
+                // Modal ko full screen karna taaki custom buttons bhi dikhen
+                modal.requestFullscreen().catch(err => {
+                    console.log("Fullscreen Error:", err);
+                });
             } else {
-                // Fullscreen se bahar nikalne ke liye
                 document.exitFullscreen();
             }
         }
 
-        // 'Esc' key se modal close karne ka option (agar fullscreen mein nahi hai)
+        // 2. Press 'Esc' to Close Player (Extra safety)
         if (e.key === 'Escape' && !document.fullscreenElement) {
             closePlayer();
         }
     }
 });
 
-    function changeQuality() {
-        const val = parseInt(document.getElementById('qualitySel').value);
-        if(hls) hls.currentLevel = val;
-        if(shakaPlayer) shakaPlayer.selectVariantTrack(shakaPlayer.getVariantTracks().find(t => t.id == val), true);
-        
-        // Quality select hone ke baad settings panel band kar do
-        document.getElementById('settingsPanel').classList.remove('open');
-    }
+   let settingsTimer;
 
-    function changeAudio() {
-        const val = document.getElementById('audioSel').value;
-        if(hls) hls.audioTrack = parseInt(val);
-        if(shakaPlayer) shakaPlayer.selectAudioLanguage(val);
-        
-        // Audio select hone ke baad settings panel band kar do
-        document.getElementById('settingsPanel').classList.remove('open');
+function resetSettingsTimer() {
+    // Purana timer cancel karein
+    clearTimeout(settingsTimer);
+    
+    const panel = document.getElementById('settingsPanel');
+    
+    // Agar panel khula hai, toh 5 second ka naya timer lagayein
+    if (panel.classList.contains('open')) {
+        settingsTimer = setTimeout(() => {
+            panel.classList.remove('open');
+        }, 5000); // 5000ms = 5 seconds
     }
+}
+
+function toggleSettings() {
+    const panel = document.getElementById('settingsPanel');
+    panel.classList.toggle('open');
+    
+    // Timer shuru karein
+    resetSettingsTimer();
+}
+
+// Inactivity detect karne ke liye listeners (Panel ke upar mouse aane par timer ruk jaye)
+const settingsPanel = document.getElementById('settingsPanel');
+settingsPanel.addEventListener('mousemove', resetSettingsTimer);
+settingsPanel.addEventListener('click', resetSettingsTimer);
+settingsPanel.addEventListener('touchstart', resetSettingsTimer);
+
+// Quality change hone par timer reset ho ya turant band ho jaye
+function changeQuality() {
+    const val = parseInt(document.getElementById('qualitySel').value);
+    if(hls) hls.currentLevel = val;
+    if(shakaPlayer) shakaPlayer.selectVariantTrack(shakaPlayer.getVariantTracks().find(t => t.id == val), true);
+    
+    // Option: Quality badalne ke baad turant band karna hai toh niche wali line use karein
+    // document.getElementById('settingsPanel').classList.remove('open');
+    
+    resetSettingsTimer(); // Ya phir timer reset karein
+}
+
+function changeAudio() {
+    const val = document.getElementById('audioSel').value;
+    if(hls) hls.audioTrack = parseInt(val);
+    if(shakaPlayer) shakaPlayer.selectAudioLanguage(val);
+    
+    resetSettingsTimer();
+}
 
     function closePlayer() {
         const v = document.getElementById('v-player');
