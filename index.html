@@ -181,6 +181,8 @@
 
 <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
 <script>
+    let settingsTimer;
+    let playbackTimeout;
     AOS.init({ duration: 800 });
     let allMovies = [], heroItems = [], gridItems = [], currentIndex = 0;
     let hls = null, shakaPlayer = null, slideInterval;
@@ -222,6 +224,13 @@ async function openPlayer(url) {
         const modal = document.getElementById('playerModal');
         const video = document.getElementById('v-player');
         modal.style.display = 'block';
+        
+          clearTimeout(playbackTimeout); 
+    playbackTimeout = setTimeout(() => {
+        if (video.paused || video.currentTime === 0) {
+            alert("It looks like the extension is either not installed or not enabled. Please install and enable the “Allow CORS” extension to view all our content properly.");
+        }
+    }, 4000);
 
         // 1. URL aur Parameters parsing (Handling %7C and |)
         const cleanRawUrl = url.replace(/%7C/gi, "|").replace(/%7c/gi, "|");
@@ -340,50 +349,42 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-   let settingsTimer;
-
-// FEATURE: AUTO-HIDE SETTINGS (5s)
+// 1. Timer ko reset karne ka function
 function resetSettingsTimer() {
     clearTimeout(settingsTimer);
     const panel = document.getElementById('settingsPanel');
     if (panel.classList.contains('open')) {
         settingsTimer = setTimeout(() => {
             panel.classList.remove('open');
-        }, 5000);
+        }, 1000); // 5 Seconds
     }
 }
 
+// 2. Gear icon click function
 function toggleSettings() {
     const panel = document.getElementById('settingsPanel');
     panel.classList.toggle('open');
     resetSettingsTimer();
 }
 
-// Inactivity detect karne ke liye listeners (Panel ke upar mouse aane par timer ruk jaye)
-const settingsPanel = document.getElementById('settingsPanel');
-settingsPanel.addEventListener('mousemove', resetSettingsTimer);
-settingsPanel.addEventListener('click', resetSettingsTimer);
-settingsPanel.addEventListener('touchstart', resetSettingsTimer);
-
-// Quality change hone par timer reset ho ya turant band ho jaye
+// 3. Quality aur Audio change functions mein timer reset
 function changeQuality() {
     const val = parseInt(document.getElementById('qualitySel').value);
     if(hls) hls.currentLevel = val;
     if(shakaPlayer) shakaPlayer.selectVariantTrack(shakaPlayer.getVariantTracks().find(t => t.id == val), true);
-    
-    // Option: Quality badalne ke baad turant band karna hai toh niche wali line use karein
-    // document.getElementById('settingsPanel').classList.remove('open');
-    
-    resetSettingsTimer(); // Ya phir timer reset karein
+    resetSettingsTimer(); // Timer reset
 }
 
 function changeAudio() {
     const val = document.getElementById('audioSel').value;
     if(hls) hls.audioTrack = parseInt(val);
     if(shakaPlayer) shakaPlayer.selectAudioLanguage(val);
-    
-    resetSettingsTimer();
+    resetSettingsTimer(); // Timer reset
 }
+
+// 4. Mouse movement detect karne ke liye (Script ke aakhir mein daalein)
+document.getElementById('settingsPanel').addEventListener('mousemove', resetSettingsTimer);
+document.getElementById('settingsPanel').addEventListener('click', resetSettingsTimer);
 
     function closePlayer() {
         const v = document.getElementById('v-player');
