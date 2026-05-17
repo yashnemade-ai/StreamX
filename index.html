@@ -308,7 +308,7 @@ async function openPlayer(url) {
         } catch (e) { console.error("Playback Error:", e); }
     }
     
-    // PC Keyboard Shortcuts for Player
+// PC Keyboard Shortcuts for Player
 document.addEventListener('keydown', (e) => {
     const modal = document.getElementById('playerModal');
     const video = document.getElementById('v-player');
@@ -316,19 +316,24 @@ document.addEventListener('keydown', (e) => {
     // Agar player modal khula hai tabhi shortcut kaam karein
     if (modal.style.display === 'block') {
         
-        // 1. Press 'F' to Toggle Fullscreen
+        // 1. Press 'F' to Toggle Fullscreen (ONLY VIDEO)
         if (e.key.toLowerCase() === 'f') {
             if (!document.fullscreenElement) {
-                // Modal ko full screen karna taaki custom buttons bhi dikhen
-                modal.requestFullscreen().catch(err => {
-                    console.log("Fullscreen Error:", err);
-                });
+                // Humne yahan 'video' ko target kiya hai, 'modal' ko nahi
+                // Isse logo, settings, aur close button apne aap gayab ho jayenge
+                if (video.requestFullscreen) {
+                    video.requestFullscreen();
+                } else if (video.webkitRequestFullscreen) { /* Safari/iOS */
+                    video.webkitRequestFullscreen();
+                } else if (video.msRequestFullscreen) { /* IE11 */
+                    video.msRequestFullscreen();
+                }
             } else {
                 document.exitFullscreen();
             }
         }
 
-        // 2. Press 'Esc' to Close Player (Extra safety)
+        // 2. Press 'Esc' to Close Player
         if (e.key === 'Escape' && !document.fullscreenElement) {
             closePlayer();
         }
