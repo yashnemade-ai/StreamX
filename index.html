@@ -108,6 +108,38 @@
         .settings-panel { background: #111; border: 1px solid #333; padding: 15px; border-radius: 10px; width: 200px; margin-bottom: 10px; display: none; }
         .settings-panel.open { display: block; }
         .setting-row select { width: 100%; background: #222; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 5px; margin-bottom: 10px; }
+/* Footer Layout: Quality Left, Download Right */
+.card-footer-box {
+    display: flex;
+    justify-content: space-between; /* Isse elements opposite sides par chale jayenge */
+    align-items: center;
+    margin-top: 10px;
+}
+
+/* Red Arrow Styling (Chota Size) */
+.red-dl-arrow {
+    color: #E50914 !important;
+    font-size: 18px; /* Chota size jaisa aapne maanga */
+    text-decoration: none;
+    transition: 0.3s;
+    cursor: pointer;
+    display: flex;
+    transform: translateY(-9px);
+    align-items: center;
+}
+
+.red-dl-arrow:hover {
+    transform: scale(1.1);
+    color: #ff0000 !important;
+}
+
+/* Quality tag ki adjustment */
+.quality-tag {
+    margin-top: 0 !important; /* Extra space hatane ke liye */
+    font-size: 9px;
+    font-weight: 900;
+}
+
     </style>
 </head>
 <body>
@@ -230,7 +262,7 @@ async function openPlayer(url) {
         if (video.paused || video.currentTime === 0) {
             alert("It looks like the extension is either not installed or not enabled. Please install and enable the “Allow CORS” extension to view all our content properly.");
         }
-    }, 4000);
+    }, 5000);
 
         // 1. URL aur Parameters parsing (Handling %7C and |)
         const cleanRawUrl = url.replace(/%7C/gi, "|").replace(/%7c/gi, "|");
@@ -360,6 +392,13 @@ function resetSettingsTimer() {
     }
 }
 
+// 2. Gear icon click function
+function toggleSettings() {
+    const panel = document.getElementById('settingsPanel');
+    panel.classList.toggle('open');
+    resetSettingsTimer();
+}
+
 // 3. Quality aur Audio change functions mein timer reset
 function changeQuality() {
     const val = parseInt(document.getElementById('qualitySel').value);
@@ -410,8 +449,29 @@ document.getElementById('settingsPanel').addEventListener('click', resetSettings
     function manualSlide(i) { clearInterval(slideInterval); goToSlide(i); startAutoSlide(); }
     function goToSlide(i) { currentIndex = i; document.getElementById('sliderWrapper').style.transform = `translateX(-${i * 100}%)`; document.querySelectorAll('.dot').forEach((d, idx) => d.classList.toggle('active', idx === i)); document.querySelectorAll('.slide').forEach((s, idx) => s.classList.toggle('active', idx === i)); }
     function startAutoSlide() { slideInterval = setInterval(() => goToSlide((currentIndex + 1) % heroItems.length), 6000); }
-    function renderGrid(d) { document.getElementById('movieGrid').innerHTML = d.map(m => `<div class="movie-card" onclick="openPlayer('${m.url}')"><img src="${m.logo}" loading="lazy"><div class="card-info"><span class="card-genre">${m.cat || 'General'}</span><h4>${m.name}</h4><div class="quality-tag">${m.quality || 'WEB-HQ'}</div></div></div>`).join(''); }
-    function searchMovies() { renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(document.getElementById('searchInput').value.toLowerCase()))); }
+function renderGrid(data) {
+    document.getElementById('movieGrid').innerHTML = data.map(m => `
+        <div class="movie-card" onclick="openPlayer('${m.url}')">
+            <img src="${m.logo}" loading="lazy">
+            <div class="card-info">
+                <span class="card-genre">${m.cat || 'General'}</span>
+                <h4>${m.name}</h4>
+                
+                <div class="card-footer-box">
+                    <!-- 1. Quality Tag: Hamesha LEFT mein rahega -->
+                    <div class="quality-tag">${m.quality || 'WEB-HQ'}</div>
+
+                    <!-- 2. Download Arrow: Sirf tab dikhega jab JSON mein 'dl' ho (RIGHT mein) -->
+                    ${(m.dl && m.dl.trim() !== "") ? `
+                        <a href="${m.dl}" target="_blank" class="red-dl-arrow" onclick="event.stopPropagation();" title="Download">
+                            <i class="fa-solid fa-download"></i>
+                        </a>
+                    ` : '<span></span>'} 
+                </div>
+            </div>
+        </div>`).join('');
+}
+   function searchMovies() { renderGrid(gridItems.filter(m => m.name.toLowerCase().includes(document.getElementById('searchInput').value.toLowerCase()))); }
     function toggleTheme() { const h = document.documentElement; const n = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; h.setAttribute('data-theme', n); document.getElementById('themeBtn').innerHTML = n === 'dark' ? '<i class="fa-solid fa-moon"></i>' : '<i class="fa-solid fa-sun"></i>'; }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
     function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
