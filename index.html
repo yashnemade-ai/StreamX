@@ -260,7 +260,6 @@ async function openPlayer(url) {
           clearTimeout(playbackTimeout); 
     playbackTimeout = setTimeout(() => {
         if (video.paused || video.currentTime === 0) {
-            alert("It looks like the extension is either not installed or not enabled. Please install and enable the “Allow CORS” extension to view all our content properly.");
         }
     }, 5000);
 
